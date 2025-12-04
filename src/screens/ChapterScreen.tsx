@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import api from '../api/client';
+import Tts from 'react-native-tts';          // 🔹 NEW: TTS import
 
 type VocabItem = {
   word: string;
@@ -49,6 +50,33 @@ const ChapterScreen = () => {
     fetchChapter();
   }, [chapterNum, level]);
 
+  // 🔹 OPTIONAL: একবার ডিফল্ট জার্মান language সেট করা
+useEffect(() => {
+  (async () => {
+    try {
+      const voices = await Tts.voices();
+      const germanVoices = voices.filter(
+        v => v.language === 'de-DE' && !v.notInstalled
+      );
+
+      if (germanVoices.length > 0) {
+        await Tts.setDefaultVoice(germanVoices[0].id);
+      }
+
+      await Tts.setDefaultLanguage('de-DE');
+
+      // ⭐ STRONG + CLEAR + FAST (not too fast)
+      await Tts.setDefaultRate(0.75, true);  // 0.65–0.75 is natural-fast
+      await Tts.setDefaultPitch(1.0);       // deeper + stronger tone
+
+    } catch (err) {
+      console.log('TTS setup error:', err);
+    }
+  })();
+}, []);
+
+
+
   // বাকি কোড আগের মতোই…
   const handleNext = () => {
     if (!data.length) return;
@@ -61,6 +89,15 @@ const ChapterScreen = () => {
       prev === 0 ? data.length - 1 : prev - 1
     );
   };
+
+  // 🔊 এই ফাংশন বাটন চাপলে জার্মান word টা বলবে
+const handleSpeak = () => {
+  const vocab = data[currentIndex];
+  if (!vocab?.word) return;
+
+  Tts.stop();
+  Tts.speak(vocab.word);
+};
 
   if (loading) {
     return (
@@ -95,7 +132,14 @@ const ChapterScreen = () => {
       </Text>
 
       <View style={styles.card}>
-        <Text style={styles.word}>{vocab.word}</Text>
+        <View style={styles.wordRow}>
+          <Text style={styles.word}>{vocab.word}</Text>
+
+          {/* 🔊 Play button */}
+          <TouchableOpacity style={styles.speakBtn} onPress={handleSpeak}>
+            <Text style={styles.speakBtnText}>▶</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.label}>Bangla:</Text>
         <Text style={styles.value}>{vocab.bangla || '—'}</Text>
@@ -126,7 +170,6 @@ const ChapterScreen = () => {
 export default ChapterScreen;
 
 // styles নিচে আগের মতোই থাকবে
-
 
 const styles = StyleSheet.create({
   center: {
@@ -164,11 +207,29 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
   },
+  wordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
   word: {
     fontSize: 26,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 12,
+  },
+  speakBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#111827',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  speakBtnText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: '700',
   },
   label: {
     color: '#bfdbfe',
