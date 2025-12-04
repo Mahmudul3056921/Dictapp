@@ -2,11 +2,49 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { PaperProvider } from "react-native-paper";
+import { Provider as PaperProvider } from "react-native-paper";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
 import MainTabs from "./src/navigation/MainTabs";
+import SubscriptionScreen from "./src/screens/SubscriptionScreen";
+import PaypalScreen from "./src/screens/PaypalScreen";
 
 import { AuthProvider } from "./src/context/AuthContext";
 import { LanguageProvider } from "./src/context/LanguageContext";
+
+export type RootStackParamList = {
+  Tabs: undefined;
+  Subscription: undefined;
+  Paypal: { level?: "A1" | "A2" | "B1" };
+};
+
+const RootStack = createNativeStackNavigator<RootStackParamList>();
+
+function AppNavigation() {
+  return (
+    <NavigationContainer>
+      <RootStack.Navigator>
+        <RootStack.Screen
+          name="Tabs"
+          component={MainTabs}
+          options={{ headerShown: false }}
+        />
+
+        <RootStack.Screen
+          name="Subscription"
+          component={SubscriptionScreen}
+          options={{ title: "Subscription" }}
+        />
+
+        <RootStack.Screen
+          name="Paypal"
+          component={PaypalScreen}
+          options={{ title: "Pay with PayPal" }}
+        />
+      </RootStack.Navigator>
+    </NavigationContainer>
+  );
+}
 
 export default function App() {
   return (
@@ -14,9 +52,7 @@ export default function App() {
       <AuthProvider>
         <LanguageProvider>
           <SafeAreaProvider>
-            <NavigationContainer>
-              <MainTabs />
-            </NavigationContainer>
+            <AppNavigation />
           </SafeAreaProvider>
         </LanguageProvider>
       </AuthProvider>

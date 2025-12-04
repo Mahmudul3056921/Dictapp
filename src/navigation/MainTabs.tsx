@@ -17,12 +17,14 @@ import QuizScreen from "../screens/QuizScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import ChapterScreen from "../screens/ChapterScreen";
 import QuizCardsScreen from "../screens/QuizCardsScreen";
+import SubscriptionScreen from "../screens/SubscriptionScreen";
 
 // ---------- Tab types ----------
 type RootTabParamList = {
   Home: undefined;
   Learn: undefined;
   Quiz: undefined;
+  Subscription: undefined;
   Profile: undefined;
 };
 
@@ -62,7 +64,10 @@ function QuizStackNavigator() {
 }
 
 // ---------- Icon helper ----------
-const getTabIconName = (routeName: keyof RootTabParamList, focused: boolean) => {
+const getTabIconName = (
+  routeName: keyof RootTabParamList,
+  focused: boolean
+) => {
   switch (routeName) {
     case "Home":
       return "home";
@@ -70,6 +75,8 @@ const getTabIconName = (routeName: keyof RootTabParamList, focused: boolean) => 
       return "menu-book";
     case "Quiz":
       return focused ? "quiz" : "help-outline";
+    case "Subscription":
+      return "credit-card"; // or "payments"
     case "Profile":
       return focused ? "person" : "person-outline";
     default:
@@ -125,6 +132,11 @@ export default function MainTabs() {
         name="Quiz"
         component={QuizStackNavigator}
         options={{ title: "Quiz" }}
+      />
+      <Tab.Screen
+        name="Subscription"
+        component={SubscriptionScreen}
+        options={{ title: "Subscription" }}
       />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

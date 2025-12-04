@@ -4,6 +4,8 @@ import { ScrollView, View, StyleSheet } from 'react-native';
 import { Text, Card, Button } from 'react-native-paper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../../App';
 
 type Plan = {
   level: 'A1' | 'A2' | 'B1';
@@ -72,8 +74,13 @@ const plans: Plan[] = [
   },
 ];
 
+type SubscriptionNavProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Subscription'
+>;
+
 const SubscriptionScreen = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<SubscriptionNavProp>();
 
   const handleBuy = (level: Plan['level']) => {
     navigation.navigate('Paypal', { level });
