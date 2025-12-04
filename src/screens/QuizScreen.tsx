@@ -13,8 +13,13 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
+import {
+  LanguageContext,
+  Language,
+} from '../context/LanguageContext';
 
 const chapters = Array.from({ length: 12 }, (_, i) => i + 1);
 
@@ -28,9 +33,114 @@ const roleToLevel = (role: Role): 'A1' | 'A2' | 'B1' => {
 
 const PAGE_SIZE = 6;
 
+// 🔹 Language-based texts (similar to web QUIZ_TEXTS)
+const QUIZ_TEXTS: Record<
+  Language,
+  {
+    title: (level: string) => string;
+    freeInfo: string;
+    currentLevel: (level: string, role: string | null) => string;
+    showing: (first: number, last: number, total: number) => string;
+    chapterLabel: string;
+    locked: string;
+  }
+> = {
+  bangla: {
+    title: (level) => `Quiz – চ্যাপ্টারসমূহ (${level})`,
+    freeInfo:
+      'Chapter 1 ফ্রি, অন্য কুইজ দিতে লগইন ও subscription লাগবে।',
+    currentLevel: (level, role) =>
+      `আপনার বর্তমান level: ${level} (${role ?? 'unknown'})`,
+    showing: (first, last, total) =>
+      `Showing quiz chapters ${first}–${last} of ${total}`,
+    chapterLabel: 'Chapter',
+    locked: 'Locked',
+  },
+  english: {
+    title: (level) => `Quiz – Chapters (${level})`,
+    freeInfo:
+      'Chapter 1 is free. To access other quizzes you need login & subscription.',
+    currentLevel: (level, role) =>
+      `Your current level: ${level} (${role ?? 'unknown'})`,
+    showing: (first, last, total) =>
+      `Showing quiz chapters ${first}–${last} of ${total}`,
+    chapterLabel: 'Chapter',
+    locked: 'Locked',
+  },
+  hindi: {
+    title: (level) => `Quiz – अध्याय (${level})`,
+    freeInfo:
+      'Chapter 1 फ्री है, बाकी क्विज़ के लिए लॉगिन और subscription ज़रूरी है।',
+    currentLevel: (level, role) =>
+      `आपका वर्तमान level: ${level} (${role ?? 'unknown'})`,
+    showing: (first, last, total) =>
+      `Showing quiz chapters ${first}–${last} of ${total}`,
+    chapterLabel: 'अध्याय',
+    locked: 'Locked',
+  },
+  urdu: {
+    title: (level) => `Quiz – ابواب (${level})`,
+    freeInfo:
+      'Chapter 1 فری ہے، باقی کوئز کے لیے لاگ اِن اور subscription درکار ہے۔',
+    currentLevel: (level, role) =>
+      `آپ کا موجودہ level: ${level} (${role ?? 'unknown'})`,
+    showing: (first, last, total) =>
+      `Showing quiz chapters ${first}–${last} of ${total}`,
+    chapterLabel: 'Chapter',
+    locked: 'Locked',
+  },
+  tamil: {
+    title: (level) => `Quiz – அத்தியாயங்கள் (${level})`,
+    freeInfo:
+      'Chapter 1 free, மற்ற quiz களை பார்க்க login + subscription தேவை.',
+    currentLevel: (level, role) =>
+      `உங்கள் தற்போதைய level: ${level} (${role ?? 'unknown'})`,
+    showing: (first, last, total) =>
+      `Showing quiz chapters ${first}–${last} of ${total}`,
+    chapterLabel: 'அத்தியாயம்',
+    locked: 'Locked',
+  },
+  malayalam: {
+    title: (level) => `Quiz – അധ്യായങ്ങൾ (${level})`,
+    freeInfo:
+      'Chapter 1 ഫ്രീ ആണ്, മറ്റു ക്വിസുകൾക്കായി login + subscription വേണം.',
+    currentLevel: (level, role) =>
+      `നിങ്ങളുടെ നിലവിലെ level: ${level} (${role ?? 'unknown'})`,
+    showing: (first, last, total) =>
+      `Showing quiz chapters ${first}–${last} of ${total}`,
+    chapterLabel: 'അധ്യായം',
+    locked: 'Locked',
+  },
+  nepali: {
+    title: (level) => `Quiz – अध्यायहरू (${level})`,
+    freeInfo:
+      'Chapter 1 फ्री छ, अरू क्विजका लागि login र subscription चाहिन्छ।',
+    currentLevel: (level, role) =>
+      `तपाईंको level: ${level} (${role ?? 'unknown'})`,
+    showing: (first, last, total) =>
+      `Showing quiz chapters ${first}–${last} of ${total}`,
+    chapterLabel: 'अध्याय',
+    locked: 'Locked',
+  },
+  arabic: {
+    title: (level) => `Quiz – الفصول (${level})`,
+    freeInfo:
+      'Chapter 1 مجاني، للوصول إلى بقية الاختبارات تحتاج إلى تسجيل الدخول واشتراك.',
+    currentLevel: (level, role) =>
+      `مستواك الحالي: ${level} (${role ?? 'unknown'})`,
+    showing: (first, last, total) =>
+      `Showing quiz chapters ${first}–${last} of ${total}`,
+    chapterLabel: 'الفصل',
+    locked: 'Locked',
+  },
+};
+
 const QuizScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useContext(AuthContext);
+  const { language } = useContext(LanguageContext);
+
+  const t = QUIZ_TEXTS[language] || QUIZ_TEXTS.bangla;
 
   const [role, setRole] = useState<Role>(null);
   const [loadingRole, setLoadingRole] = useState(false);
@@ -56,7 +166,7 @@ const QuizScreen = () => {
     }
   }, [user]);
 
-  // ১) user বদলালে একবার role লোড করো
+  // user বদলালে একবার role লোড করো
   useEffect(() => {
     if (user) {
       fetchRole();
@@ -65,7 +175,7 @@ const QuizScreen = () => {
     }
   }, [user, fetchRole]);
 
-  // ২) QuizScreen ফোকাসে এলেই fresh role লোড করো
+  // QuizScreen ফোকাসে এলেই fresh role লোড করো
   useFocusEffect(
     useCallback(() => {
       if (user) {
@@ -135,24 +245,18 @@ const QuizScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Quiz – Chapters ({level})</Text>
-
-      {/* no "আপনার level জানা হচ্ছে…" */}
+      <Text style={styles.title}>{t.title(level)}</Text>
 
       {!loadingRole && !user && (
-        <Text style={styles.subtitle}>
-          Chapter 1 ফ্রি, অন্য কুইজ দিতে লগইন ও subscription লাগবে।
-        </Text>
+        <Text style={styles.subtitle}>{t.freeInfo}</Text>
       )}
 
       {!loadingRole && user && role && role !== 'admin' && (
-        <Text style={styles.subtitle}>
-          আপনার বর্তমান level: {level} ({role})
-        </Text>
+        <Text style={styles.subtitle}>{t.currentLevel(level, role)}</Text>
       )}
 
       <Text style={styles.smallInfo}>
-        Showing quiz chapters {firstChapter}–{lastChapter} of {chapters.length}
+        {t.showing(firstChapter, lastChapter, chapters.length)}
       </Text>
 
       <FlatList
@@ -167,16 +271,18 @@ const QuizScreen = () => {
               onPress={() => handleOpenQuiz(item)}
               disabled={!allowed}
             >
-              <Text style={styles.cardText}>Chapter {item}</Text>
+              <Text style={styles.cardText}>
+                {t.chapterLabel} {item}
+              </Text>
               {!allowed && item > 1 && (
-                <Text style={styles.lockText}>Locked</Text>
+                <Text style={styles.lockText}>{t.locked}</Text>
               )}
             </TouchableOpacity>
           );
         }}
       />
 
-      {/* Professional pagination (same style as LearnScreen) */}
+      {/* Pagination */}
       <View style={styles.paginationContainer}>
         <TouchableOpacity
           style={[

@@ -1,7 +1,11 @@
 // src/screens/ProfileScreen.tsx
-import React, { useEffect, useState, useContext } from "react";
+import React, {
+  useEffect,
+  useState,
+  useContext,
+  useCallback,
+} from 'react';
 import {
-  
   View,
   Text,
   Button,
@@ -9,25 +13,23 @@ import {
   Image,
   ActivityIndicator,
   Alert,
-} from "react-native";
-
-import { SafeAreaView } from 'react-native-safe-area-context'; 
-
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   GoogleSignin,
   SignInResponse,
   isSuccessResponse,
-} from "@react-native-google-signin/google-signin";
+} from '@react-native-google-signin/google-signin';
 
-import axios from "axios";
-import api from "../api/client";           // ⚠️ নিশ্চিত হও path ঠিক আছে
-import { AuthContext } from "../context/AuthContext";
+import axios from 'axios';
+import api from '../api/client';
+import { AuthContext } from '../context/AuthContext';
 
-const API = "https://dictserver-main.vercel.app";
+const API = 'https://dictserver-main.vercel.app';
 
 const WEB_CLIENT_ID =
-  "978636197840-ubshs2i4lf66ln4fo3oisvp6tj4uq5i4.apps.googleusercontent.com";
+  '978636197840-ubshs2i4lf66ln4fo3oisvp6tj4uq5i4.apps.googleusercontent.com';
 
 type GoogleUser = {
   id: string;
@@ -43,7 +45,7 @@ export default function ProfileScreen() {
 
   const { setAuthFromBackend, user, logout } = useContext(AuthContext);
 
-  // 👉 Google Signin setup
+  // 👉 Google Signin setup (only once)
   useEffect(() => {
     GoogleSignin.configure({
       webClientId: WEB_CLIENT_ID,
@@ -51,23 +53,23 @@ export default function ProfileScreen() {
     });
   }, []);
 
-  // 👉 Backend থেকে role লোড
-  const fetchRole = async () => {
+  // 👉 Backend থেকে role লোড (wrapped in useCallback for stable reference)
+  const fetchRole = useCallback(async () => {
     try {
       setLoadingRole(true);
-      const res = await api.get("/users/role/me"); // এখন api already token সহ
+      const res = await api.get('/users/role/me'); // api already sends token
       setRole(res.data?.role || null);
     } catch (e: any) {
-      console.log("role fetch error:", e?.response?.data || e.message);
+      console.log('role fetch error:', e?.response?.data || e.message);
       setRole(null);
     } finally {
       setLoadingRole(false);
     }
-  };
+  }, []);
 
+  // যখন context-এর user বদলায়, তখন googleUser + role আপডেট
   useEffect(() => {
     if (user) {
-      // Context user আছে মানে লগইন করা
       setGoogleUser({
         id: user.email,
         name: user.name ?? null,
@@ -79,7 +81,7 @@ export default function ProfileScreen() {
       setGoogleUser(null);
       setRole(null);
     }
-  }, [user]);
+  }, [user, fetchRole]);
 
   const handleSignIn = async () => {
     try {
@@ -102,10 +104,10 @@ export default function ProfileScreen() {
       const tokens = await GoogleSignin.getTokens();
       const idToken = tokens.idToken;
 
-      if (!idToken) throw new Error("No Google ID token");
+      if (!idToken) throw new Error('No Google ID token');
 
       // 👉 3) Backend এ পাঠাই
-      const result = await axios.post(API + "/auth/google", {
+      const result = await axios.post(API + '/auth/google', {
         idToken,
       });
 
@@ -113,7 +115,7 @@ export default function ProfileScreen() {
       const jwtToken = result.data.token;
 
       if (!backendUser?.email || !jwtToken) {
-        throw new Error("Invalid backend response");
+        throw new Error('Invalid backend response');
       }
 
       // 👉 4) AuthContext + AsyncStorage + axios header সব আপডেট করি
@@ -122,10 +124,10 @@ export default function ProfileScreen() {
       // 👉 5) Role আবার লোড করি
       await fetchRole();
 
-      Alert.alert("Success", "You are logged in!");
+      Alert.alert('Success', 'You are logged in!');
     } catch (err) {
-      console.log("Google login error:", err);
-      Alert.alert("Login failed", "Google দিয়ে লগইন করতে সমস্যা হচ্ছে।");
+      console.log('Google login error:', err);
+      Alert.alert('Login failed', 'Google দিয়ে লগইন করতে সমস্যা হচ্ছে।');
     }
   };
 
@@ -133,9 +135,9 @@ export default function ProfileScreen() {
     try {
       await GoogleSignin.signOut();
     } catch (err) {
-      console.log("Google signOut error:", err);
+      console.log('Google signOut error:', err);
     }
-    await logout();          // AuthContext + AsyncStorage clear
+    await logout(); // AuthContext + AsyncStorage clear
     setGoogleUser(null);
     setRole(null);
   };
@@ -145,7 +147,7 @@ export default function ProfileScreen() {
       <View style={styles.center}>
         {!googleUser ? (
           <>
-            <Text style={{ marginBottom: 20 }}>Not logged in</Text>
+            <Text style={styles.notLoggedText}>Not logged in</Text>
             <Button title="Sign in with Google" onPress={handleSignIn} />
           </>
         ) : (
@@ -157,21 +159,23 @@ export default function ProfileScreen() {
               />
             )}
 
-            <Text>Logged in as: {googleUser.name}</Text>
-            <Text>Email: {googleUser.email}</Text>
+            <Text style={styles.nameText}>
+              Logged in as: {googleUser.name}
+            </Text>
+            <Text style={styles.emailText}>Email: {googleUser.email}</Text>
 
             {loadingRole ? (
-              <ActivityIndicator style={{ marginTop: 10 }} />
+              <ActivityIndicator style={styles.roleLoader} />
             ) : role ? (
-              <Text style={{ marginTop: 10 }}>
-                Role: {role}{" "}
-                {role === "basic user" && "(Waiting for admin approval)"}
+              <Text style={styles.roleText}>
+                Role: {role}{' '}
+                {role === 'basic user' && '(Waiting for admin approval)'}
               </Text>
             ) : (
-              <Text style={{ marginTop: 10 }}>Role: (Not loaded)</Text>
+              <Text style={styles.roleText}>Role: (Not loaded)</Text>
             )}
 
-            <View style={{ marginTop: 20 }}>
+            <View style={styles.signOutWrapper}>
               <Button title="Sign out" onPress={handleSignOut} />
             </View>
           </>
@@ -182,12 +186,45 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center" },
-  center: { alignItems: "center" },
+  container: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 16,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notLoggedText: {
+    marginBottom: 20,
+    fontSize: 16,
+    color: '#4B5563',
+  },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     marginBottom: 16,
+  },
+  nameText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  emailText: {
+    fontSize: 14,
+    color: '#4B5563',
+  },
+  roleLoader: {
+    marginTop: 10,
+  },
+  roleText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#374151',
+  },
+  signOutWrapper: {
+    marginTop: 20,
   },
 });

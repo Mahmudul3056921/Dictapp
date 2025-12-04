@@ -1,5 +1,9 @@
-// উপরে একই imports থাকবে
-import React, { useEffect, useState } from 'react';
+// src/screens/ChapterScreen.tsx
+import React, {
+  useEffect,
+  useState,
+  useContext,
+} from 'react';
 import {
   View,
   Text,
@@ -8,27 +12,80 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
+import Tts from 'react-native-tts';
+
 import api from '../api/client';
-import Tts from 'react-native-tts';          // 🔹 NEW: TTS import
+import {
+  LanguageContext,
+  Language,
+} from '../context/LanguageContext';
 
 type VocabItem = {
   word: string;
   bangla?: string;
   english: string;
   sentence: string;
+  hindi?: string;
+  urdu?: string;
+  tamil?: string;
+  malayalam?: string;
+  nepali?: string;
+  arabic?: string;
   [key: string]: any;
+};
+
+const LANGUAGE_LABELS: Record<Language, string> = {
+  bangla: 'Bangla',
+  english: 'English',
+  hindi: 'हिन्दी',
+  urdu: 'اردو',
+  tamil: 'தமிழ்',
+  malayalam: 'മലയാളം',
+  nepali: 'नेपाली',
+  arabic: 'العربية',
+};
+
+const getTranslationForLanguage = (
+  vocab: VocabItem,
+  lang: Language
+): string => {
+  switch (lang) {
+    case 'bangla':
+      return vocab.bangla ?? '—';
+    case 'hindi':
+      return vocab.hindi ?? '—';
+    case 'urdu':
+      return vocab.urdu ?? '—';
+    case 'tamil':
+      return vocab.tamil ?? '—';
+    case 'malayalam':
+      return vocab.malayalam ?? '—';
+    case 'nepali':
+      return vocab.nepali ?? '—';
+    case 'arabic':
+      return vocab.arabic ?? '—';
+    case 'english':
+    default:
+      return vocab.english ?? '—';
+  }
 };
 
 const ChapterScreen = () => {
   const route = useRoute<any>();
-  const { number, level = 'A1' } = route.params || { number: 1, level: 'A1' };
+  const { number, level = 'A1' } = route.params || {
+    number: 1,
+    level: 'A1',
+  };
   const chapterNum = Number(number) || 1;
+
+  const { language } = useContext(LanguageContext);
 
   const [data, setData] = useState<VocabItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Fetch chapter data
   useEffect(() => {
     const fetchChapter = async () => {
       try {
@@ -36,11 +93,15 @@ const ChapterScreen = () => {
         setError(null);
         setCurrentIndex(0);
 
-        // 🔹 এখন level ব্যবহার করছি
-        const res = await api.get(`/chapter/${chapterNum}?level=${level}`);
+        const res = await api.get(
+          `/chapter/${chapterNum}?level=${level}`
+        );
         setData(res.data || []);
       } catch (e: any) {
-        console.log('Chapter fetch error:', e?.response?.data || e.message);
+        console.log(
+          'Chapter fetch error:',
+          e?.response?.data || e.message
+        );
         setError('ডেটা লোড করতে সমস্যা হচ্ছে।');
       } finally {
         setLoading(false);
@@ -50,34 +111,28 @@ const ChapterScreen = () => {
     fetchChapter();
   }, [chapterNum, level]);
 
-  // 🔹 OPTIONAL: একবার ডিফল্ট জার্মান language সেট করা
-useEffect(() => {
-  (async () => {
-    try {
-      const voices = await Tts.voices();
-      const germanVoices = voices.filter(
-        v => v.language === 'de-DE' && !v.notInstalled
-      );
+  // Setup TTS
+  useEffect(() => {
+    (async () => {
+      try {
+        const voices = await Tts.voices();
+        const germanVoices = voices.filter(
+          (v) => v.language === 'de-DE' && !v.notInstalled
+        );
 
-      if (germanVoices.length > 0) {
-        await Tts.setDefaultVoice(germanVoices[0].id);
+        if (germanVoices.length > 0) {
+          await Tts.setDefaultVoice(germanVoices[0].id);
+        }
+
+        await Tts.setDefaultLanguage('de-DE');
+        await Tts.setDefaultRate(0.75, true);
+        await Tts.setDefaultPitch(1.0);
+      } catch (err) {
+        console.log('TTS setup error:', err);
       }
+    })();
+  }, []);
 
-      await Tts.setDefaultLanguage('de-DE');
-
-      // ⭐ STRONG + CLEAR + FAST (not too fast)
-      await Tts.setDefaultRate(0.75, true);  // 0.65–0.75 is natural-fast
-      await Tts.setDefaultPitch(1.0);       // deeper + stronger tone
-
-    } catch (err) {
-      console.log('TTS setup error:', err);
-    }
-  })();
-}, []);
-
-
-
-  // বাকি কোড আগের মতোই…
   const handleNext = () => {
     if (!data.length) return;
     setCurrentIndex((prev) => (prev + 1) % data.length);
@@ -90,14 +145,12 @@ useEffect(() => {
     );
   };
 
-  // 🔊 এই ফাংশন বাটন চাপলে জার্মান word টা বলবে
-const handleSpeak = () => {
-  const vocab = data[currentIndex];
-  if (!vocab?.word) return;
-
-  Tts.stop();
-  Tts.speak(vocab.word);
-};
+  const handleSpeak = () => {
+    const vocab = data[currentIndex];
+    if (!vocab?.word) return;
+    Tts.stop();
+    Tts.speak(vocab.word);
+  };
 
   if (loading) {
     return (
@@ -121,6 +174,9 @@ const handleSpeak = () => {
   }
 
   const vocab = data[currentIndex];
+  const translationLabel =
+    LANGUAGE_LABELS[language] || LANGUAGE_LABELS.bangla;
+  const translationValue = getTranslationForLanguage(vocab, language);
 
   return (
     <View style={styles.container}>
@@ -141,9 +197,11 @@ const handleSpeak = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Bangla:</Text>
-        <Text style={styles.value}>{vocab.bangla || '—'}</Text>
+        {/* Selected language */}
+        <Text style={styles.label}>{translationLabel}:</Text>
+        <Text style={styles.value}>{translationValue}</Text>
 
+        {/* English always */}
         <Text style={styles.label}>English:</Text>
         <Text style={styles.value}>{vocab.english}</Text>
 
@@ -168,8 +226,6 @@ const handleSpeak = () => {
 };
 
 export default ChapterScreen;
-
-// styles নিচে আগের মতোই থাকবে
 
 const styles = StyleSheet.create({
   center: {
