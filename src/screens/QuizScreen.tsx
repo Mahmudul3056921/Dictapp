@@ -26,6 +26,8 @@ const roleToLevel = (role: Role): 'A1' | 'A2' | 'B1' => {
   return 'A1';
 };
 
+const PAGE_SIZE = 6;
+
 const QuizScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useContext(AuthContext);
@@ -33,7 +35,10 @@ const QuizScreen = () => {
   const [role, setRole] = useState<Role>(null);
   const [loadingRole, setLoadingRole] = useState(false);
 
-  // 🔹 role ফেচ করার ফাংশন — বারবার use করব
+  // pagination state
+  const [page, setPage] = useState(1);
+  const totalPages = Math.ceil(chapters.length / PAGE_SIZE);
+
   const fetchRole = useCallback(async () => {
     if (!user) {
       setRole(null);
@@ -51,7 +56,7 @@ const QuizScreen = () => {
     }
   }, [user]);
 
-  // ✅ ১) user বদলালে একবার role লোড করো
+  // ১) user বদলালে একবার role লোড করো
   useEffect(() => {
     if (user) {
       fetchRole();
@@ -60,7 +65,7 @@ const QuizScreen = () => {
     }
   }, [user, fetchRole]);
 
-  // ✅ ২) QuizScreen ফোকাসে এলেই fresh role লোড করো
+  // ২) QuizScreen ফোকাসে এলেই fresh role লোড করো
   useFocusEffect(
     useCallback(() => {
       if (user) {
@@ -72,7 +77,7 @@ const QuizScreen = () => {
   const level = roleToLevel(role);
 
   const canAccess = (n: number) => {
-    if (n === 1) return true;
+    if (n === 1) return true; // Chapter 1 quiz always free
     if (!user) return false;
     if (role === 'admin') return true;
     if (level === 'A1' && role === 'customer') return true;
@@ -86,13 +91,53 @@ const QuizScreen = () => {
     navigation.navigate('QuizCards', { number, level });
   };
 
+  // current page chapters
+  const startIndex = (page - 1) * PAGE_SIZE;
+  const endIndex = startIndex + PAGE_SIZE;
+  const visibleChapters = chapters.slice(startIndex, endIndex);
+
+  const goToPage = (p: number) => {
+    if (p < 1 || p > totalPages) return;
+    setPage(p);
+  };
+
+  const renderPageNumbers = () => {
+    return (
+      <View style={styles.pageNumberWrapper}>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+          const isActive = p === page;
+          return (
+            <TouchableOpacity
+              key={p}
+              style={[
+                styles.pageNumberBtn,
+                isActive && styles.pageNumberBtnActive,
+              ]}
+              onPress={() => goToPage(p)}
+            >
+              <Text
+                style={[
+                  styles.pageNumberText,
+                  isActive && styles.pageNumberTextActive,
+                ]}
+              >
+                {p}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  };
+
+  const firstChapter = visibleChapters[0];
+  const lastChapter = visibleChapters[visibleChapters.length - 1];
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Quiz – Chapters ({level})</Text>
 
-      {loadingRole && (
-        <Text style={styles.subtitle}>আপনার level জানা হচ্ছে…</Text>
-      )}
+      {/* no "আপনার level জানা হচ্ছে…" */}
 
       {!loadingRole && !user && (
         <Text style={styles.subtitle}>
@@ -106,8 +151,12 @@ const QuizScreen = () => {
         </Text>
       )}
 
+      <Text style={styles.smallInfo}>
+        Showing quiz chapters {firstChapter}–{lastChapter} of {chapters.length}
+      </Text>
+
       <FlatList
-        data={chapters}
+        data={visibleChapters}
         keyExtractor={(item) => item.toString()}
         contentContainerStyle={{ paddingVertical: 16 }}
         renderItem={({ item }) => {
@@ -126,6 +175,33 @@ const QuizScreen = () => {
           );
         }}
       />
+
+      {/* Professional pagination (same style as LearnScreen) */}
+      <View style={styles.paginationContainer}>
+        <TouchableOpacity
+          style={[
+            styles.pageArrowBtn,
+            page === 1 && styles.pageArrowBtnDisabled,
+          ]}
+          onPress={() => goToPage(page - 1)}
+          disabled={page === 1}
+        >
+          <Text style={styles.pageArrowText}>‹</Text>
+        </TouchableOpacity>
+
+        {renderPageNumbers()}
+
+        <TouchableOpacity
+          style={[
+            styles.pageArrowBtn,
+            page === totalPages && styles.pageArrowBtnDisabled,
+          ]}
+          onPress={() => goToPage(page + 1)}
+          disabled={page === totalPages}
+        >
+          <Text style={styles.pageArrowText}>›</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -149,7 +225,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#4b5563',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
+  },
+  smallInfo: {
+    fontSize: 12,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginTop: 4,
   },
   card: {
     backgroundColor: '#22c55e',
@@ -170,5 +252,60 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 12,
     color: '#e5e7eb',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  pageArrowBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 4,
+    backgroundColor: 'white',
+  },
+  pageArrowBtnDisabled: {
+    opacity: 0.4,
+  },
+  pageArrowText: {
+    fontSize: 18,
+    color: '#111827',
+    fontWeight: '600',
+  },
+  pageNumberWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pageNumberBtn: {
+    minWidth: 32,
+    paddingHorizontal: 8,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 2,
+    backgroundColor: 'white',
+  },
+  pageNumberBtnActive: {
+    backgroundColor: '#111827',
+    borderColor: '#111827',
+  },
+  pageNumberText: {
+    fontSize: 13,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  pageNumberTextActive: {
+    color: 'white',
+    fontWeight: '700',
   },
 });
