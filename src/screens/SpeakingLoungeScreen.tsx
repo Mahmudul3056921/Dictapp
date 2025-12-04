@@ -1,14 +1,13 @@
 // src/screens/SpeakingLoungeScreen.tsx
 import React, { useContext, useEffect, useState } from 'react';
-
-
 import {
   View,
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Linking,Alert,
+  Linking,
+  Alert,
 } from 'react-native';
 import {
   Text,
@@ -59,7 +58,6 @@ const SpeakingLoungeScreen = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
 
-  // 🆕 helper to load messages
   const loadMessages = async (showLoading = true) => {
     if (!user) return;
     try {
@@ -73,7 +71,7 @@ const SpeakingLoungeScreen = () => {
     }
   };
 
-  // 🔁 Heartbeat
+  // Heartbeat
   useEffect(() => {
     if (!user) return;
 
@@ -90,7 +88,7 @@ const SpeakingLoungeScreen = () => {
     return () => clearInterval(id);
   }, [user]);
 
-  // 👥 Online users (keep polling)
+  // Online users
   useEffect(() => {
     if (!user) return;
 
@@ -108,12 +106,11 @@ const SpeakingLoungeScreen = () => {
     return () => clearInterval(id);
   }, [user]);
 
-  // 💬 Messages – load only once on mount / when user changes
+  // Messages
   useEffect(() => {
     if (!user) return;
     loadMessages(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSend = async () => {
     if (!message.trim() || !user) return;
@@ -121,8 +118,6 @@ const SpeakingLoungeScreen = () => {
       setSending(true);
       await api.post('/community/messages', { text: message.trim() });
       setMessage('');
-
-      // reload messages, but don't show loading spinner
       await loadMessages(false);
     } catch (err: any) {
       console.log('send message error:', err?.response?.data || err.message);
@@ -130,26 +125,23 @@ const SpeakingLoungeScreen = () => {
       setSending(false);
     }
   };
-const openZoom = async () => {
-  if (!ZOOM_SPEAKING_URL) {
-    Alert.alert('Zoom link missing', 'Please contact support.');
-    return;
-  }
 
-  try {
-    console.log('Trying to open Zoom URL:', ZOOM_SPEAKING_URL);
+  const openZoom = async () => {
+    if (!ZOOM_SPEAKING_URL) {
+      Alert.alert('Zoom link missing', 'Please contact support.');
+      return;
+    }
 
-    // simpler: just try to open it
-    await Linking.openURL(ZOOM_SPEAKING_URL);
-  } catch (e) {
-    console.log('Zoom link error:', e);
-    Alert.alert(
-      'Could not open Zoom',
-      'Please check that you have a browser or Zoom installed on your device.'
-    );
-  }
-};
-
+    try {
+      await Linking.openURL(ZOOM_SPEAKING_URL);
+    } catch (e) {
+      console.log('Zoom link error:', e);
+      Alert.alert(
+        'Could not open Zoom',
+        'Please check that you have a browser or Zoom installed on your device.'
+      );
+    }
+  };
 
   const meName = getDisplayName(user?.email || '');
 
@@ -189,6 +181,20 @@ const openZoom = async () => {
     );
   };
 
+  // ---------- Not logged in state ----------
+  if (!user) {
+    return (
+      <View style={styles.notLoggedScreen}>
+        <Text style={styles.notLoggedTitle}>Speaking Lounge</Text>
+        <Text style={styles.notLoggedSubtitle}>
+          Please login from the Profile tab to join the Speaking Lounge and
+          community chat.
+        </Text>
+      </View>
+    );
+  }
+
+  // ---------- Logged in layout ----------
   return (
     <KeyboardAvoidingView
       style={styles.screen}
@@ -200,7 +206,7 @@ const openZoom = async () => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.inner}>
-          {/* Online + Zoom */}
+          {/* Top cards: Online users + Zoom */}
           <View style={styles.topSection}>
             <Card style={styles.card} mode="elevated">
               <Card.Content>
@@ -237,15 +243,16 @@ const openZoom = async () => {
                 </Text>
 
                 {ZOOM_SPEAKING_URL ? (
-                 <Button
-  mode="contained"
-  style={styles.zoomButton}
-  contentStyle={styles.zoomButtonContent}
-  onPress={openZoom}          // ✅ make sure it’s this
->
-  Join Zoom Speaking Room
-</Button>
-
+                  <Button
+                    mode="contained"
+                    style={styles.zoomButton}
+                    contentStyle={styles.zoomButtonContent}
+                    buttonColor="#2563EB"
+                    labelStyle={styles.zoomButtonLabel}
+                    onPress={openZoom}
+                  >
+                    Join Zoom Speaking Room
+                  </Button>
                 ) : (
                   <Text style={styles.zoomMissing}>
                     Zoom link সেট করা নেই। (ZOOM_SPEAKING_URL)
@@ -259,8 +266,15 @@ const openZoom = async () => {
           <Card style={styles.chatCard} mode="elevated">
             <Card.Content style={styles.chatCardContent}>
               <View style={styles.chatHeader}>
-                <Text style={styles.chatTitle}>Community Chat</Text>
-                <Text style={styles.chatSubtitle}>Logged in as {meName}</Text>
+                <View>
+                  <Text style={styles.chatTitle}>Community Chat</Text>
+                  <Text style={styles.chatSubtitle}>Logged in as {meName}</Text>
+                </View>
+                <Ionicons
+                  name="chatbubbles-outline"
+                  size={20}
+                  color="#4B5563"
+                />
               </View>
 
               <View style={styles.chatMessagesWrapper}>
@@ -287,17 +301,28 @@ const openZoom = async () => {
 
               <View style={styles.inputRow}>
                 <TextInput
-                  mode="outlined"
-                  style={styles.input}
-                  placeholder="Write a message to other learners…"
-                  value={message}
-                  onChangeText={setMessage}
-                  dense
-                />
+  mode="outlined"
+  style={styles.input}
+  placeholder="Write a message to other learners…"
+  value={message}
+  onChangeText={setMessage}
+  dense
+  textColor="#111827"
+  outlineColor="#D1D5DB"
+  activeOutlineColor="#2563EB"
+  theme={{
+    colors: {
+      text: "#111827",        // typing text color
+      placeholder: "#9CA3AF", // placeholder color
+      primary: "#2563EB",     // focus border
+    }
+  }}
+/>
                 <Button
                   mode="contained"
                   style={styles.sendButton}
                   contentStyle={styles.sendButtonContent}
+                  buttonColor="#4F46E5"
                   onPress={handleSend}
                   loading={sending}
                   disabled={!message.trim() || sending}
@@ -315,10 +340,11 @@ const openZoom = async () => {
 
 export default SpeakingLoungeScreen;
 
+// ----------------- STYLES -----------------
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#F4F6FB',
   },
   scroll: {
     flex: 1,
@@ -331,12 +357,35 @@ const styles = StyleSheet.create({
   inner: {
     flex: 1,
   },
+
+  // ----- Not logged in -----
+  notLoggedScreen: {
+    flex: 1,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  notLoggedTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+    color: '#111827',
+  },
+  notLoggedSubtitle: {
+    fontSize: 13,
+    color: '#4B5563',
+    textAlign: 'center',
+  },
+
+  // ----- Top section -----
   topSection: {
     marginBottom: 16,
   },
   card: {
-    borderRadius: 16,
-    marginBottom: 10,
+     borderRadius: 18,
+  marginBottom: 12,
+  backgroundColor: '#FFFFFF',
   },
   cardTitle: {
     fontSize: 16,
@@ -346,25 +395,27 @@ const styles = StyleSheet.create({
   },
   cardSubtitle: {
     fontSize: 11,
-    color: '#6b7280',
+    color: '#6B7280',
     marginBottom: 8,
   },
   onlineList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6 as any, // TS workaround if needed; or remove 'gap' if not supported
   },
   onlineEmpty: {
     fontSize: 12,
-    color: '#9ca3af',
-  },
+    color: '#9CA3AF',
+  },chatCard: {
+  borderRadius: 18,
+  backgroundColor: '#FFFFFF',
+},
   onlineChip: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: '#E5E7EB',
     marginRight: 4,
     marginBottom: 4,
   },
@@ -372,27 +423,29 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#22c55e',
+    backgroundColor: '#22C55E',
     marginRight: 4,
   },
   onlineName: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#1f2937',
+    color: '#1F2937',
   },
+
+  // ----- Zoom card -----
   zoomCard: {
-    borderRadius: 16,
-    backgroundColor: '#4f46e5',
+    borderRadius: 18,
+    backgroundColor: '#4F46E5',
   },
   zoomTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   zoomText: {
     fontSize: 13,
-    color: '#e0e7ff',
+    color: '#E0E7FF',
     marginBottom: 10,
   },
   zoomButton: {
@@ -401,14 +454,17 @@ const styles = StyleSheet.create({
   zoomButtonContent: {
     paddingVertical: 6,
   },
+  zoomButtonLabel: {
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
   zoomMissing: {
     fontSize: 11,
-    color: '#fee2e2',
+    color: '#FEE2E2',
   },
-  chatCard: {
-    borderRadius: 16,
-    minHeight: 320,
-  },
+
+  // ----- Chat -----
+ 
   chatCardContent: {
     paddingBottom: 8,
   },
@@ -425,16 +481,19 @@ const styles = StyleSheet.create({
   },
   chatSubtitle: {
     fontSize: 11,
-    color: '#6b7280',
+    color: '#6B7280',
+    marginTop: 2,
   },
   chatMessagesWrapper: {
     flex: 1,
-    minHeight: 200,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    marginBottom: 8,
+  minHeight: 200,
+  backgroundColor: '#FFFFFF',
+  borderRadius: 12,
+  paddingHorizontal: 8,
+  paddingVertical: 8,
+  marginBottom: 8,
+  borderWidth: 1,
+  borderColor: '#E5E7EB',
   },
   chatLoading: {
     alignItems: 'center',
@@ -443,74 +502,88 @@ const styles = StyleSheet.create({
   },
   chatLoadingText: {
     fontSize: 12,
-    color: '#6b7280',
+    color: '#6B7280',
     marginTop: 4,
   },
   chatEmptyText: {
     fontSize: 12,
-    color: '#9ca3af',
+    color: '#9CA3AF',
     textAlign: 'center',
     marginTop: 12,
   },
   chatListContent: {
     paddingBottom: 4,
   },
-  messageRow: {
-    marginBottom: 6,
-    flexDirection: 'row',
-  },
-  messageRowMe: {
-    justifyContent: 'flex-end',
-  },
-  messageRowOther: {
-    justifyContent: 'flex-start',
-  },
-  messageBubble: {
-    maxWidth: '75%',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  messageBubbleMe: {
-    backgroundColor: '#4f46e5',
-    borderTopRightRadius: 4,
-  },
-  messageBubbleOther: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e5e7eb',
-    borderWidth: 1,
-    borderTopLeftRadius: 4,
-  },
-  messageSender: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#6b7280',
-    marginBottom: 2,
-  },
-  messageText: {
-    fontSize: 13,
-    color: '#111827',
-  },
-  messageTime: {
-    fontSize: 10,
-    color: '#9ca3af',
-    marginTop: 2,
-    textAlign: 'right',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  input: {
+
+  // ----- Messages -----
+ // ----- Messages -----
+messageRow: {
+  marginBottom: 8,
+  flexDirection: 'row',
+  paddingHorizontal: 4,
+},
+messageRowMe: {
+  justifyContent: 'flex-end',
+},
+messageRowOther: {
+  justifyContent: 'flex-start',
+},
+messageBubble: {
+  maxWidth: '75%',
+  paddingHorizontal: 12,
+  paddingVertical: 8,
+  borderRadius: 16,
+},
+messageBubbleMe: {
+  backgroundColor: '#E8F0FF', // soft light blue
+  borderRadius: 16,
+  borderTopRightRadius: 4,
+},
+messageBubbleOther: {
+  backgroundColor: '#FFFFFF',
+  borderColor: '#E5E7EB',
+  borderWidth: 1,
+  borderRadius: 16,
+  borderTopLeftRadius: 4,
+},
+messageSender: {
+  fontSize: 10,
+  fontWeight: '600',
+  color: '#6B7280',
+  marginBottom: 3,
+},
+messageText: {
+  fontSize: 14,
+  color: '#1F2937', // dark gray text
+},
+messageTime: {
+  fontSize: 10,
+  color: '#9CA3AF',
+  marginTop: 4,
+  textAlign: 'right',
+},
+
+
+  // ----- Input -----
+ // ----- Input -----
+inputRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginTop: 6,
+},
+input: {
     flex: 1,
-    marginRight: 6,
-  },
-  sendButton: {
-    borderRadius: 999,
-  },
-  sendButtonContent: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
+  backgroundColor: '#FFFFFF',
+  borderRadius: 12,
+},
+sendButton: {
+  marginLeft: 6,
+  borderRadius: 50,
+  backgroundColor: '#2563EB',
+},
+sendButtonContent: {
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+},
+
 });

@@ -1,3 +1,4 @@
+// src/components/SpeakingRoomFab.tsx
 import React, { useContext } from 'react';
 import { StyleSheet } from 'react-native';
 import { FAB } from 'react-native-paper';
@@ -8,7 +9,6 @@ const SpeakingRoomFab = () => {
   const { user } = useContext(AuthContext);
   const navigation = useNavigation<any>();
 
-  // Only show for logged-in users
   if (!user) return null;
 
   return (

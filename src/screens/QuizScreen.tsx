@@ -81,7 +81,7 @@ const QUIZ_TEXTS: Record<
   urdu: {
     title: (level) => `Quiz – ابواب (${level})`,
     freeInfo:
-      'Chapter 1 فری ہے، باقی کوئز کے لیے لاگ اِن اور subscription درکار ہے۔',
+      'Chapter 1 فری ہے، باقی کوئز کے لیے لاگ اِن اور subscription दरकार ہے۔',
     currentLevel: (level, role) =>
       `آپ کا موجودہ level: ${level} (${role ?? 'unknown'})`,
     showing: (first, last, total) =>
@@ -262,7 +262,7 @@ const QuizScreen = () => {
       <FlatList
         data={visibleChapters}
         keyExtractor={(item) => item.toString()}
-        contentContainerStyle={{ paddingVertical: 16 }}
+        contentContainerStyle={styles.flatListContent}
         renderItem={({ item }) => {
           const allowed = canAccess(item);
           return (
@@ -319,46 +319,62 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 24,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F4F6FB',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 4,
     textAlign: 'center',
+    color: '#111827',
   },
   subtitle: {
     fontSize: 13,
-    color: '#4b5563',
+    color: '#4B5563',
     textAlign: 'center',
     marginBottom: 4,
   },
   smallInfo: {
     fontSize: 12,
-    color: '#6b7280',
+    color: '#6B7280',
     textAlign: 'center',
     marginTop: 4,
   },
-  card: {
-    backgroundColor: '#22c55e',
-    paddingVertical: 14,
-    borderRadius: 12,
-    marginVertical: 6,
-    alignItems: 'center',
+  flatListContent: {
+    paddingVertical: 16,
   },
-  cardDisabled: {
-    backgroundColor: '#9ca3af',
-  },
-  cardText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  lockText: {
-    marginTop: 2,
-    fontSize: 12,
-    color: '#e5e7eb',
-  },
+
+  // 🔹 Quiz chapter buttons
+ card: {
+  backgroundColor: '#7DD3FC', // crystal sky blue
+  paddingVertical: 14,
+  borderRadius: 16,
+  marginVertical: 6,
+  alignItems: 'center',
+  elevation: 3,
+  borderWidth: 1,
+  borderColor: '#E0F2FE', // glassy border
+},
+
+cardDisabled: {
+  backgroundColor: '#BAE6FD', // lighter crystal tone
+  borderColor: '#E0F2FE',
+},
+
+cardText: {
+  color: '#0369A1', // deep professional blue text
+  fontSize: 16,
+  fontWeight: '700',
+},
+
+lockText: {
+  marginTop: 2,
+  fontSize: 12,
+  color: '#0C4A6E', // darker icy-blue
+},
+
+  
+
   paginationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -371,11 +387,11 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 4,
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
   },
   pageArrowBtnDisabled: {
     opacity: 0.4,
@@ -395,11 +411,11 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 2,
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
   },
   pageNumberBtnActive: {
     backgroundColor: '#111827',
@@ -411,7 +427,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   pageNumberTextActive: {
-    color: 'white',
+    color: '#FFFFFF',
     fontWeight: '700',
   },
 });
+

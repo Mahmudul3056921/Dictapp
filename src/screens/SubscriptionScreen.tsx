@@ -4,8 +4,6 @@ import { ScrollView, View, StyleSheet } from 'react-native';
 import { Text, Card, Button } from 'react-native-paper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../../App';
 
 type Plan = {
   level: 'A1' | 'A2' | 'B1';
@@ -13,10 +11,8 @@ type Plan = {
   price: string;
   badge: string;
   highlight: boolean;
-  colors: {
-    header: string;
-    border: string;
-  };
+  headerColor: string;
+  borderColor: string;
   features: string[];
 };
 
@@ -27,10 +23,8 @@ const plans: Plan[] = [
     price: '10 €',
     badge: 'Start from zero',
     highlight: false,
-    colors: {
-      header: '#22d3ee', // cyan-400
-      border: '#bfdbfe', // blue-200
-    },
+    headerColor: '#DBEAFE', // soft blue
+    borderColor: '#BFDBFE',
     features: [
       'Full access to all A1 vocabulary chapters',
       'A1 quizzes & performance tracking',
@@ -44,10 +38,8 @@ const plans: Plan[] = [
     price: '15 €',
     badge: 'Most popular',
     highlight: true,
-    colors: {
-      header: '#6366f1', // indigo-500
-      border: '#818cf8', // indigo-400
-    },
+    headerColor: '#E0E7FF',
+    borderColor: '#A5B4FC',
     features: [
       'Full access to all A2 vocabulary chapters',
       'A2 quizzes & performance tracking',
@@ -61,10 +53,8 @@ const plans: Plan[] = [
     price: '20 €',
     badge: 'For serious learners',
     highlight: false,
-    colors: {
-      header: '#34d399', // emerald-400
-      border: '#6ee7b7', // emerald-300
-    },
+    headerColor: '#E0F2FE',
+    borderColor: '#BAE6FD',
     features: [
       'Full access to all B1 vocabulary chapters',
       'B1 quizzes & performance tracking',
@@ -74,28 +64,18 @@ const plans: Plan[] = [
   },
 ];
 
-type SubscriptionNavProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'Subscription'
->;
-
 const SubscriptionScreen = () => {
-  const navigation = useNavigation<SubscriptionNavProp>();
+  const navigation = useNavigation<any>();
 
   const handleBuy = (level: Plan['level']) => {
     navigation.navigate('Paypal', { level });
   };
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.content}
-    >
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       {/* Header */}
       <View style={styles.headerWrapper}>
-        <Text style={styles.headerTitle}>
-          Choose Your German Course Level
-        </Text>
+        <Text style={styles.headerTitle}>Choose Your German Course Level</Text>
         <Text style={styles.headerSubtitle}>
           Unlock full access to LEARN and QUIZ for your selected level. One-time
           payment, lifetime access.
@@ -109,34 +89,30 @@ const SubscriptionScreen = () => {
         </View>
       </View>
 
-      {/* Cards */}
+      {/* Plan cards */}
       <View style={styles.cardsWrapper}>
         {plans.map((plan) => (
           <Card
             key={plan.level}
             style={[
               styles.card,
-              { borderColor: plan.colors.border },
+              { borderColor: plan.borderColor },
               plan.highlight && styles.cardHighlight,
             ]}
             mode="elevated"
           >
-            {/* Top bar */}
+            {/* Top color bar */}
             <View
               style={[
                 styles.cardHeaderBar,
-                { backgroundColor: plan.colors.header },
+                { backgroundColor: plan.headerColor },
               ]}
             />
 
-            {/* Popular ribbon */}
+            {/* “Most popular” ribbon */}
             {plan.highlight && (
               <View style={styles.ribbon}>
-                <Ionicons
-                  name="star"
-                  size={10}
-                  style={styles.ribbonIcon}
-                />
+                <Ionicons name="star" size={10} style={styles.ribbonIcon} />
                 <Text style={styles.ribbonText}>MOST POPULAR</Text>
               </View>
             )}
@@ -148,7 +124,7 @@ const SubscriptionScreen = () => {
                 <Text style={styles.cardBadge}>{plan.badge}</Text>
               </View>
 
-              {/* Price row */}
+              {/* Price */}
               <View style={styles.priceRow}>
                 <Text style={styles.priceValue}>{plan.price}</Text>
                 <Text style={styles.priceSuffix}> / one-time</Text>
@@ -186,8 +162,8 @@ const SubscriptionScreen = () => {
       </View>
 
       <Text style={styles.footerText}>
-        After payment, your account will be upgraded automatically and you
-        will get access to all chapters and quizzes for the selected level.
+        After payment, your account will be upgraded automatically and you will
+        get access to all chapters and quizzes for the selected level.
       </Text>
     </ScrollView>
   );
@@ -198,7 +174,7 @@ export default SubscriptionScreen;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: '#F3F4F6', // same light gray as Performance screen
   },
   content: {
     paddingHorizontal: 16,
@@ -217,7 +193,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 13,
-    color: '#4b5563',
+    color: '#4B5563',
     textAlign: 'center',
     marginBottom: 10,
   },
@@ -228,20 +204,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#e0e7ff',
+    borderColor: '#E0E7FF',
   },
   pillDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#22c55e',
+    backgroundColor: '#22C55E',
     marginRight: 6,
   },
   pillText: {
     fontSize: 11,
-    color: '#4b5563',
+    color: '#4B5563',
   },
   cardsWrapper: {
     marginTop: 12,
@@ -250,10 +226,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 16,
     borderWidth: 1,
+    backgroundColor: '#FFFFFF',
     overflow: 'hidden',
   },
   cardHighlight: {
-    borderColor: '#6366f1',
+    borderColor: '#2563EB',
   },
   cardHeaderBar: {
     height: 6,
@@ -268,16 +245,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#FEF3C7',
   },
   ribbonIcon: {
-    color: '#b45309',
+    color: '#B45309',
     marginRight: 4,
   },
   ribbonText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#b45309',
+    color: '#B45309',
   },
   cardTitleWrapper: {
     marginTop: 8,
@@ -290,7 +267,7 @@ const styles = StyleSheet.create({
   },
   cardBadge: {
     fontSize: 11,
-    color: '#4f46e5',
+    color: '#2563EB',
     marginTop: 2,
     fontWeight: '600',
   },
@@ -302,11 +279,11 @@ const styles = StyleSheet.create({
   priceValue: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#4f46e5',
+    color: '#2563EB',
   },
   priceSuffix: {
     fontSize: 11,
-    color: '#6b7280',
+    color: '#6B7280',
     marginLeft: 4,
   },
   featuresWrapper: {
@@ -318,7 +295,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   featureIcon: {
-    color: '#22c55e',
+    color: '#22C55E',
     marginRight: 6,
     marginTop: 2,
   },
@@ -330,16 +307,17 @@ const styles = StyleSheet.create({
   buyButton: {
     borderRadius: 999,
     marginTop: 4,
+    borderColor: '#2563EB',
   },
   buyButtonHighlight: {
-    backgroundColor: '#4f46e5',
+    backgroundColor: '#2563EB',
   },
   buyButtonContent: {
     paddingVertical: 6,
   },
   footerText: {
     fontSize: 11,
-    color: '#6b7280',
+    color: '#6B7280',
     textAlign: 'center',
     marginTop: 8,
   },

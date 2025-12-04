@@ -18,13 +18,15 @@ import ProfileScreen from "../screens/ProfileScreen";
 import ChapterScreen from "../screens/ChapterScreen";
 import QuizCardsScreen from "../screens/QuizCardsScreen";
 import SubscriptionScreen from "../screens/SubscriptionScreen";
+import SpeakingLoungeScreen from "../screens/SpeakingLoungeScreen";
+import PerformanceScreen from "../screens/PerformanceScreen";
 
 // ---------- Tab types ----------
 type RootTabParamList = {
   Home: undefined;
   Learn: undefined;
   Quiz: undefined;
-  Subscription: undefined;
+  Community: undefined; // 👈 bottom tab for community chat / speaking lounge
   Profile: undefined;
 };
 
@@ -32,6 +34,7 @@ type RootTabParamList = {
 type LearnStackParamList = {
   LearnMain: undefined;
   Chapter: { number?: number; level?: string };
+  SpeakingLounge: undefined;
 };
 
 type QuizStackParamList = {
@@ -39,9 +42,16 @@ type QuizStackParamList = {
   QuizCards: { number?: number; level?: string };
 };
 
+type ProfileStackParamList = {
+  ProfileMain: undefined;
+  Performance: undefined;
+  Subscription: undefined;
+};
+
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const LearnStack = createNativeStackNavigator<LearnStackParamList>();
 const QuizStack = createNativeStackNavigator<QuizStackParamList>();
+const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 // ---------- Learn stack ----------
 function LearnStackNavigator() {
@@ -49,6 +59,11 @@ function LearnStackNavigator() {
     <LearnStack.Navigator screenOptions={{ headerShown: false }}>
       <LearnStack.Screen name="LearnMain" component={LearnScreen} />
       <LearnStack.Screen name="Chapter" component={ChapterScreen} />
+      {/* Still available from Learn (e.g. SpeakingRoomFab) */}
+      <LearnStack.Screen
+        name="SpeakingLounge"
+        component={SpeakingLoungeScreen}
+      />
     </LearnStack.Navigator>
   );
 }
@@ -60,6 +75,20 @@ function QuizStackNavigator() {
       <QuizStack.Screen name="QuizMain" component={QuizScreen} />
       <QuizStack.Screen name="QuizCards" component={QuizCardsScreen} />
     </QuizStack.Navigator>
+  );
+}
+
+// ---------- Profile stack (Profile + Performance + Subscription) ----------
+function ProfileStackNavigator() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
+      <ProfileStack.Screen name="Performance" component={PerformanceScreen} />
+      <ProfileStack.Screen
+        name="Subscription"
+        component={SubscriptionScreen}
+      />
+    </ProfileStack.Navigator>
   );
 }
 
@@ -75,8 +104,8 @@ const getTabIconName = (
       return "menu-book";
     case "Quiz":
       return focused ? "quiz" : "help-outline";
-    case "Subscription":
-      return "credit-card"; // or "payments"
+    case "Community":
+      return "forum"; // 👈 community chat / speaking icon
     case "Profile":
       return focused ? "person" : "person-outline";
     default:
@@ -133,12 +162,18 @@ export default function MainTabs() {
         component={QuizStackNavigator}
         options={{ title: "Quiz" }}
       />
+      {/* 👇 New community tab using SpeakingLoungeScreen */}
       <Tab.Screen
-        name="Subscription"
-        component={SubscriptionScreen}
-        options={{ title: "Subscription" }}
+        name="Community"
+        component={SpeakingLoungeScreen}
+        options={{ title: "Community" }}
       />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      {/* 👇 Profile tab with nested stack: Profile, Performance, Subscription */}
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStackNavigator}
+        options={{ title: "Profile" }}
+      />
     </Tab.Navigator>
   );
 }

@@ -6,7 +6,6 @@ import { Provider as PaperProvider } from "react-native-paper";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import MainTabs from "./src/navigation/MainTabs";
-import SubscriptionScreen from "./src/screens/SubscriptionScreen";
 import PaypalScreen from "./src/screens/PaypalScreen";
 
 import { AuthProvider } from "./src/context/AuthContext";
@@ -14,7 +13,6 @@ import { LanguageProvider } from "./src/context/LanguageContext";
 
 export type RootStackParamList = {
   Tabs: undefined;
-  Subscription: undefined;
   Paypal: { level?: "A1" | "A2" | "B1" };
 };
 
@@ -30,12 +28,7 @@ function AppNavigation() {
           options={{ headerShown: false }}
         />
 
-        <RootStack.Screen
-          name="Subscription"
-          component={SubscriptionScreen}
-          options={{ title: "Subscription" }}
-        />
-
+        {/* Only keep Paypal here as a modal/stack screen */}
         <RootStack.Screen
           name="Paypal"
           component={PaypalScreen}
