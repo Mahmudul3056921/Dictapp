@@ -15,6 +15,11 @@ import Icon13 from '../assets/icons/icon13.svg';
 import Icon14 from '../assets/icons/icon14.svg';
 import Icon15 from '../assets/icons/icon15.svg';
 import Icon16 from '../assets/icons/icon16.svg';
+import Icon17 from '../assets/icons/icon17.svg';
+import Icon18 from '../assets/icons/icon18.svg';
+import Icon19 from '../assets/icons/icon19.svg';
+import Icon20 from '../assets/icons/icon20.svg';
+import Icon21 from '../assets/icons/icon21.svg';
 
 // Export as a single object
 export const Icons = {
@@ -34,6 +39,11 @@ export const Icons = {
   Icon14,
   Icon15,
   Icon16,
+  Icon17,
+  Icon18,
+  Icon19,
+  Icon20,
+  Icon21,
 };
 
 // Usage example:

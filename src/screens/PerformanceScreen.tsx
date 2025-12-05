@@ -2,9 +2,18 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import { Text, Card, ActivityIndicator } from 'react-native-paper';
+import { BarChart } from 'react-native-chart-kit';
+
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
-import { PieChart, BarChart } from 'react-native-chart-kit';
+import { Icons } from '../components/Icons';
+
+// ---- SVG icon components (top-level) ----
+const PerformanceIcon = () => <Icons.Icon9 width={22} height={22} />;
+const CorrectIcon = () => <Icons.Icon11 width={18} height={18} />;
+const WrongIcon = () => <Icons.Icon12 width={18} height={18} />;
+const AccuracyIcon = () => <Icons.Icon13 width={18} height={18} />;
+const LoginIcon = () => <Icons.Icon4 width={26} height={26} />;
 
 type Level = 'A1' | 'A2' | 'B1';
 
@@ -21,7 +30,7 @@ const chartConfig = {
   backgroundGradientFrom: '#FFFFFF',
   backgroundGradientTo: '#FFFFFF',
   decimalPlaces: 0,
-  color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
+  color: (opacity = 1) => `rgba(79, 70, 229, ${opacity})`, // indigo
   labelColor: (opacity = 1) => `rgba(55, 65, 81, ${opacity})`,
   barPercentage: 0.6,
 };
@@ -99,23 +108,6 @@ const PerformanceScreen = () => {
   const total = filtered.length;
   const percent = total ? Math.round((totalCorrect / total) * 100) : 0;
 
-  const pieData = [
-    {
-      name: 'Correct',
-      population: totalCorrect,
-      color: '#22C55E',
-      legendFontColor: '#374151',
-      legendFontSize: 12,
-    },
-    {
-      name: 'Wrong',
-      population: totalWrong,
-      color: '#EF4444',
-      legendFontColor: '#374151',
-      legendFontSize: 12,
-    },
-  ];
-
   // Aggregate by chapter
   const chaptersMap: Record<number, { correct: number; wrong: number }> = {};
   filtered.forEach((item) => {
@@ -146,10 +138,13 @@ const PerformanceScreen = () => {
     return (
       <View style={styles.centerContainer}>
         <Card style={styles.loginCard} mode="elevated">
-          <Card.Content>
-            <Text style={styles.loginTitle}>Please login to see performance</Text>
+          <Card.Content style={styles.loginContent}>
+            <View style={styles.loginIconWrapper}>
+              <LoginIcon />
+            </View>
+            <Text style={styles.loginTitle}>Sign in to see your progress</Text>
             <Text style={styles.loginSubtitle}>
-              Performance page is only available for registered users.
+              Performance is only available for registered users who play quizzes.
             </Text>
           </Card.Content>
         </Card>
@@ -158,9 +153,26 @@ const PerformanceScreen = () => {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
-      <View style={styles.titleWrapper}>
-        <Text style={styles.titleText}>Your {level} Performance</Text>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Header with icon + level pill */}
+      <View style={styles.headerRow}>
+        <View style={styles.headerLeft}>
+          <View style={styles.headerIconWrapper}>
+            <PerformanceIcon />
+          </View>
+          <View>
+            <Text style={styles.titleText}>Performance overview</Text>
+            <Text style={styles.titleSubText}>Based on your quiz history</Text>
+          </View>
+        </View>
+
+        <View style={styles.levelPill}>
+          <Text style={styles.levelPillText}>Level {level}</Text>
+        </View>
       </View>
 
       <Card style={styles.mainCard} mode="elevated">
@@ -178,41 +190,34 @@ const PerformanceScreen = () => {
             <>
               {/* Summary */}
               <View style={styles.summaryRow}>
-                <View style={styles.summaryBox}>
+                <View style={[styles.summaryBox, styles.summaryBoxCorrect]}>
+                  <View style={styles.summaryIconWrapper}>
+                    <CorrectIcon />
+                  </View>
                   <Text style={styles.summaryLabel}>Correct</Text>
                   <Text style={styles.summaryValue}>{totalCorrect}</Text>
                 </View>
-                <View style={styles.summaryBox}>
+
+                <View style={[styles.summaryBox, styles.summaryBoxWrong]}>
+                  <View style={styles.summaryIconWrapper}>
+                    <WrongIcon />
+                  </View>
                   <Text style={styles.summaryLabel}>Wrong</Text>
                   <Text style={styles.summaryValue}>{totalWrong}</Text>
                 </View>
-                <View style={styles.summaryBox}>
+
+                <View style={[styles.summaryBox, styles.summaryBoxAccuracy]}>
+                  <View style={styles.summaryIconWrapper}>
+                    <AccuracyIcon />
+                  </View>
                   <Text style={styles.summaryLabel}>Accuracy</Text>
                   <Text style={styles.summaryValue}>{percent}%</Text>
                 </View>
               </View>
 
-              {/* Pie chart */}
+              {/* Bar chart only – chapter wise */}
               <View style={styles.chartCard}>
-                <Text style={styles.chartTitle}>Overall</Text>
-                <View style={styles.chartWrapper}>
-                  <PieChart
-                    data={pieData}
-                    width={chartWidth}
-                    height={220}
-                    chartConfig={chartConfig}
-                    accessor="population"
-                    backgroundColor="transparent"
-                    paddingLeft="10"
-                    center={[5, 0]}
-                    absolute
-                  />
-                </View>
-              </View>
-
-              {/* Bar chart */}
-              <View style={styles.chartCard}>
-                <Text style={styles.chartTitle}>Per Chapter</Text>
+                <Text style={styles.chartTitle}>Per chapter</Text>
 
                 {sortedChapters.length > 0 ? (
                   <>
@@ -267,7 +272,7 @@ const PerformanceScreen = () => {
                 No quiz data for {level} yet.
               </Text>
               <Text style={styles.noDataSubtitle}>
-                Play some quizzes to see your progress here!
+                Play a few quizzes and come back to see your stats.
               </Text>
             </View>
           )}
@@ -282,28 +287,62 @@ export default PerformanceScreen;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F3F4F6', // light gray, no black
+    backgroundColor: '#EEF2FF',
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 24,
+    paddingTop: 20,
     paddingBottom: 24,
   },
-  titleWrapper: {
+
+  // Header
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIconWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E0E7FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
   titleText: {
-    textAlign: 'center',
     fontWeight: '700',
-    fontSize: 20,
+    fontSize: 18,
     color: '#111827',
   },
+  titleSubText: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  levelPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#DBEAFE',
+  },
+  levelPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1D4ED8',
+  },
+
+  // Card
   mainCard: {
-    borderRadius: 16,
+    borderRadius: 18,
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
   },
+
   loadingWrapper: {
     alignItems: 'center',
     paddingVertical: 40,
@@ -313,6 +352,8 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontSize: 13,
   },
+
+  // Summary boxes
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -321,22 +362,41 @@ const styles = StyleSheet.create({
   summaryBox: {
     flex: 1,
     marginHorizontal: 4,
-    backgroundColor: '#EFF6FF',
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 10,
     paddingHorizontal: 8,
     alignItems: 'center',
+  },
+  summaryBoxCorrect: {
+    backgroundColor: '#DCFCE7',
+  },
+  summaryBoxWrong: {
+    backgroundColor: '#FEE2E2',
+  },
+  summaryBoxAccuracy: {
+    backgroundColor: '#E0EAFF',
+  },
+  summaryIconWrapper: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(15, 23, 42, 0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
   summaryLabel: {
     fontSize: 12,
     color: '#4B5563',
   },
   summaryValue: {
-    marginTop: 4,
+    marginTop: 2,
     fontSize: 18,
     fontWeight: '700',
     color: '#111827',
   },
+
+  // Bar chart
   chartCard: {
     marginBottom: 20,
   },
@@ -348,7 +408,7 @@ const styles = StyleSheet.create({
   },
   chartWrapper: {
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB',
     paddingVertical: 8,
   },
   barChart: {
@@ -379,6 +439,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#4B5563',
   },
+
+  // No data
   noDataWrapper: {
     alignItems: 'center',
     paddingVertical: 32,
@@ -396,9 +458,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
   },
+
+  // Login state
   centerContainer: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -406,8 +470,21 @@ const styles = StyleSheet.create({
   loginCard: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: 16,
+    borderRadius: 18,
     backgroundColor: '#FFFFFF',
+  },
+  loginContent: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  loginIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E0E7FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
   },
   loginTitle: {
     textAlign: 'center',

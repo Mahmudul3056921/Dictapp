@@ -156,7 +156,7 @@ const ChapterScreen = () => {
     return (
       <View style={styles.center}>
         <ActivityIndicator />
-        <Text style={{ marginTop: 8 }}>
+        <Text style={styles.loadingText}>
           Chapter {chapterNum} ({level}) লোড হচ্ছে…
         </Text>
       </View>
@@ -318,5 +318,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
     color: '#4b5563',
+  },
+  loadingText: {
+    marginTop: 8,
   },
 });

@@ -19,6 +19,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/client';
+import { Icons } from '../components/Icons';
 
 type OnlineUser = {
   email: string;
@@ -48,6 +49,9 @@ const getDisplayName = (emailOrName?: string | null) => {
 
   return local;
 };
+
+// Use your SVG icon
+const LoungeIcon = () => <Icons.Icon10 width={32} height={32} />;
 
 const SpeakingLoungeScreen = () => {
   const { user } = useContext(AuthContext);
@@ -185,9 +189,12 @@ const SpeakingLoungeScreen = () => {
   if (!user) {
     return (
       <View style={styles.notLoggedScreen}>
+        <View style={styles.notLoggedIconWrap}>
+          <LoungeIcon />
+        </View>
         <Text style={styles.notLoggedTitle}>Speaking Lounge</Text>
         <Text style={styles.notLoggedSubtitle}>
-          Please login from the Profile tab to join the Speaking Lounge and
+          Please log in from the Profile tab to join the Speaking Lounge and
           community chat.
         </Text>
       </View>
@@ -206,19 +213,33 @@ const SpeakingLoungeScreen = () => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.inner}>
+          {/* Header with your icon */}
+          <View style={styles.headerRow}>
+            <View style={styles.headerIconCircle}>
+              <LoungeIcon />
+            </View>
+            <View>
+              <Text style={styles.headerTitle}>Speaking Lounge</Text>
+              <Text style={styles.headerSubtitle}>
+                Practice German with other learners in real time.
+              </Text>
+            </View>
+          </View>
+
           {/* Top cards: Online users + Zoom */}
           <View style={styles.topSection}>
             <Card style={styles.card} mode="elevated">
               <Card.Content>
                 <Text style={styles.cardTitle}>Online learners</Text>
                 <Text style={styles.cardSubtitle}>
-                  যারা গত কয়েক মিনিটের মধ্যে এক্টিভ আছেন
+                  Learners who have been active in the last few minutes.
                 </Text>
 
                 <View style={styles.onlineList}>
                   {onlineUsers.length === 0 ? (
                     <Text style={styles.onlineEmpty}>
-                      এখন কেউ online নেই, একটু পর আবার চেষ্টা করুন।
+                      No one is online right now. Please try again in a few
+                      minutes.
                     </Text>
                   ) : (
                     onlineUsers.map((u) => (
@@ -238,8 +259,7 @@ const SpeakingLoungeScreen = () => {
               <Card.Content>
                 <Text style={styles.zoomTitle}>Speaking Practice Room</Text>
                 <Text style={styles.zoomText}>
-                  চাইলে সবাই মিলে Live Zoom-এ যোগ দিয়ে জার্মান প্র্যাকটিস করতে
-                  পারেন।
+                  Join the live Zoom room to practice speaking German together.
                 </Text>
 
                 {ZOOM_SPEAKING_URL ? (
@@ -255,7 +275,7 @@ const SpeakingLoungeScreen = () => {
                   </Button>
                 ) : (
                   <Text style={styles.zoomMissing}>
-                    Zoom link সেট করা নেই। (ZOOM_SPEAKING_URL)
+                    Zoom link is not set yet. Please contact support.
                   </Text>
                 )}
               </Card.Content>
@@ -270,11 +290,9 @@ const SpeakingLoungeScreen = () => {
                   <Text style={styles.chatTitle}>Community Chat</Text>
                   <Text style={styles.chatSubtitle}>Logged in as {meName}</Text>
                 </View>
-                <Ionicons
-                  name="chatbubbles-outline"
-                  size={20}
-                  color="#4B5563"
-                />
+                <View style={styles.chatIconCircle}>
+                  <LoungeIcon />
+                </View>
               </View>
 
               <View style={styles.chatMessagesWrapper}>
@@ -287,7 +305,7 @@ const SpeakingLoungeScreen = () => {
                   </View>
                 ) : messages.length === 0 ? (
                   <Text style={styles.chatEmptyText}>
-                    এখনো কোনো মেসেজ নেই। প্রথম মেসেজটা তুমি শুরু করো 🙂
+                    No messages yet. Be the first one to say hi 🙂
                   </Text>
                 ) : (
                   <ScrollView
@@ -301,23 +319,23 @@ const SpeakingLoungeScreen = () => {
 
               <View style={styles.inputRow}>
                 <TextInput
-  mode="outlined"
-  style={styles.input}
-  placeholder="Write a message to other learners…"
-  value={message}
-  onChangeText={setMessage}
-  dense
-  textColor="#111827"
-  outlineColor="#D1D5DB"
-  activeOutlineColor="#2563EB"
-  theme={{
-    colors: {
-      text: "#111827",        // typing text color
-      placeholder: "#9CA3AF", // placeholder color
-      primary: "#2563EB",     // focus border
-    }
-  }}
-/>
+                  mode="outlined"
+                  style={styles.input}
+                  placeholder="Write a message to other learners…"
+                  value={message}
+                  onChangeText={setMessage}
+                  dense
+                  textColor="#111827"
+                  outlineColor="#D1D5DB"
+                  activeOutlineColor="#2563EB"
+                  theme={{
+                    colors: {
+                      text: '#111827',
+                      placeholder: '#9CA3AF',
+                      primary: '#2563EB',
+                    },
+                  }}
+                />
                 <Button
                   mode="contained"
                   style={styles.sendButton}
@@ -344,7 +362,7 @@ export default SpeakingLoungeScreen;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F4F6FB',
+    backgroundColor: '#EEF2FF', // brighter, soft indigo background
   },
   scroll: {
     flex: 1,
@@ -366,6 +384,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
   },
+  notLoggedIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#DBEAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
   notLoggedTitle: {
     fontSize: 18,
     fontWeight: '700',
@@ -378,14 +405,41 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+  // ----- Header -----
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  headerIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#DBEAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: '#4B5563',
+    marginTop: 2,
+  },
+
   // ----- Top section -----
   topSection: {
     marginBottom: 16,
   },
   card: {
-     borderRadius: 18,
-  marginBottom: 12,
-  backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    elevation: 2,
   },
   cardTitle: {
     fontSize: 16,
@@ -405,10 +459,8 @@ const styles = StyleSheet.create({
   onlineEmpty: {
     fontSize: 12,
     color: '#9CA3AF',
-  },chatCard: {
-  borderRadius: 18,
-  backgroundColor: '#FFFFFF',
-},
+  },
+
   onlineChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -435,7 +487,8 @@ const styles = StyleSheet.create({
   // ----- Zoom card -----
   zoomCard: {
     borderRadius: 18,
-    backgroundColor: '#4F46E5',
+    backgroundColor: '#6366F1', // brighter indigo
+    elevation: 3,
   },
   zoomTitle: {
     fontSize: 16,
@@ -450,6 +503,7 @@ const styles = StyleSheet.create({
   },
   zoomButton: {
     borderRadius: 999,
+    backgroundColor: '#F97316',
   },
   zoomButtonContent: {
     paddingVertical: 6,
@@ -464,7 +518,11 @@ const styles = StyleSheet.create({
   },
 
   // ----- Chat -----
- 
+  chatCard: {
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    elevation: 2,
+  },
   chatCardContent: {
     paddingBottom: 8,
   },
@@ -473,6 +531,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+  },
+  chatIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#DBEAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chatTitle: {
     fontSize: 16,
@@ -486,14 +552,14 @@ const styles = StyleSheet.create({
   },
   chatMessagesWrapper: {
     flex: 1,
-  minHeight: 200,
-  backgroundColor: '#FFFFFF',
-  borderRadius: 12,
-  paddingHorizontal: 8,
-  paddingVertical: 8,
-  marginBottom: 8,
-  borderWidth: 1,
-  borderColor: '#E5E7EB',
+    minHeight: 200,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   chatLoading: {
     alignItems: 'center',
@@ -516,74 +582,70 @@ const styles = StyleSheet.create({
   },
 
   // ----- Messages -----
- // ----- Messages -----
-messageRow: {
-  marginBottom: 8,
-  flexDirection: 'row',
-  paddingHorizontal: 4,
-},
-messageRowMe: {
-  justifyContent: 'flex-end',
-},
-messageRowOther: {
-  justifyContent: 'flex-start',
-},
-messageBubble: {
-  maxWidth: '75%',
-  paddingHorizontal: 12,
-  paddingVertical: 8,
-  borderRadius: 16,
-},
-messageBubbleMe: {
-  backgroundColor: '#E8F0FF', // soft light blue
-  borderRadius: 16,
-  borderTopRightRadius: 4,
-},
-messageBubbleOther: {
-  backgroundColor: '#FFFFFF',
-  borderColor: '#E5E7EB',
-  borderWidth: 1,
-  borderRadius: 16,
-  borderTopLeftRadius: 4,
-},
-messageSender: {
-  fontSize: 10,
-  fontWeight: '600',
-  color: '#6B7280',
-  marginBottom: 3,
-},
-messageText: {
-  fontSize: 14,
-  color: '#1F2937', // dark gray text
-},
-messageTime: {
-  fontSize: 10,
-  color: '#9CA3AF',
-  marginTop: 4,
-  textAlign: 'right',
-},
-
+  messageRow: {
+    marginBottom: 8,
+    flexDirection: 'row',
+    paddingHorizontal: 4,
+  },
+  messageRowMe: {
+    justifyContent: 'flex-end',
+  },
+  messageRowOther: {
+    justifyContent: 'flex-start',
+  },
+  messageBubble: {
+    maxWidth: '75%',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  messageBubbleMe: {
+    backgroundColor: '#E0F2FE', // soft light blue
+    borderRadius: 16,
+    borderTopRightRadius: 4,
+  },
+  messageBubbleOther: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E5E7EB',
+    borderWidth: 1,
+    borderRadius: 16,
+    borderTopLeftRadius: 4,
+  },
+  messageSender: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 3,
+  },
+  messageText: {
+    fontSize: 14,
+    color: '#1F2937',
+  },
+  messageTime: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    marginTop: 4,
+    textAlign: 'right',
+  },
 
   // ----- Input -----
- // ----- Input -----
-inputRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginTop: 6,
-},
-input: {
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  input: {
     flex: 1,
-  backgroundColor: '#FFFFFF',
-  borderRadius: 12,
-},
-sendButton: {
-  marginLeft: 6,
-  borderRadius: 50,
-  backgroundColor: '#2563EB',
-},
-sendButtonContent: {
-  paddingHorizontal: 12,
-  paddingVertical: 6,
-},
-
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+  },
+  sendButton: {
+    marginLeft: 6,
+    borderRadius: 50,
+    backgroundColor: '#2563EB',
+  },
+  sendButtonContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
 });

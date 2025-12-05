@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Alert,
   Linking,
+  SafeAreaView,
 } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
 import { RouteProp, useRoute } from '@react-navigation/native';
@@ -33,7 +34,6 @@ const PaypalScreen = () => {
   const title = LEVEL_TITLES[level] || `Course level ${level}`;
 
   const handleOpenPaypal = async () => {
-    // শুধু user check করব – api client ইতিমধ্যে token পাঠাচ্ছে
     if (!user) {
       Alert.alert('Login required', 'Please login to purchase a course.');
       return;
@@ -45,7 +45,6 @@ const PaypalScreen = () => {
       // 1️⃣ Create order on backend (no need to pass token manually)
       const res = await api.post('/paypal/create-order', { level });
 
-      // ⬇️ BACKEND শুধু orderId ফেরত দেয়
       const { orderId } = res.data || {};
       console.log('PayPal orderId:', orderId);
 
@@ -58,9 +57,8 @@ const PaypalScreen = () => {
       }
 
       // 2️⃣ Build PayPal URL from orderId
-      // 🔹 Live:
       const approvalUrl = `https://www.paypal.com/checkoutnow?token=${orderId}`;
-      // 🔹 Sandbox হলে এই লাইন ব্যবহার করো:
+      // Sandbox:
       // const approvalUrl = `https://www.sandbox.paypal.com/checkoutnow?token=${orderId}`;
 
       // 3️⃣ Open PayPal in browser (or PayPal app)
@@ -82,80 +80,94 @@ const PaypalScreen = () => {
   // If user not logged in – simple info card
   if (!user) {
     return (
-      <View style={styles.container}>
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.cardTitle}>
-              Please login
-            </Text>
-            <Text variant="bodyMedium" style={styles.cardText}>
-              You need to be logged in to purchase a course.
-            </Text>
-          </Card.Content>
-        </Card>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <Card style={styles.card}>
+            <Card.Content>
+              <Text variant="titleMedium" style={styles.cardTitle}>
+                Please login
+              </Text>
+              <Text variant="bodyMedium" style={styles.cardText}>
+                You need to be logged in to purchase a course.
+              </Text>
+            </Card.Content>
+          </Card>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleLarge" style={styles.cardTitle}>
-            Complete your purchase
-          </Text>
-          <Text variant="bodyMedium" style={styles.cardText}>
-            Course: <Text style={styles.bold}>{title}</Text>
-          </Text>
-          <Text variant="bodySmall" style={styles.cardSubText}>
-            You are logged in as{' '}
-            <Text style={styles.bold}>{user?.email}</Text>
-          </Text>
-        </Card.Content>
-      </Card>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text variant="titleLarge" style={styles.cardTitle}>
+              Complete your purchase
+            </Text>
+            <Text variant="bodyMedium" style={styles.cardText}>
+              Course: <Text style={styles.bold}>{title}</Text>
+            </Text>
+            <Text variant="bodySmall" style={styles.cardSubText}>
+              You are logged in as{' '}
+              <Text style={styles.bold}>{user?.email}</Text>
+            </Text>
+          </Card.Content>
+        </Card>
 
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="bodyMedium" style={styles.cardText}>
-            Tap the button below to pay securely with PayPal. After successful
-            payment, your account will be upgraded automatically.
-          </Text>
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text variant="bodyMedium" style={styles.cardText}>
+              Tap the button below to pay securely with PayPal. After successful
+              payment, your account will be upgraded automatically.
+            </Text>
 
-          <Button
-            mode="contained"
-            style={styles.button}
-            contentStyle={styles.buttonContent}
-            onPress={handleOpenPaypal}
-            loading={loading}
-            disabled={loading}
-          >
-            Pay with PayPal
-          </Button>
-        </Card.Content>
-      </Card>
-    </View>
+            <Button
+              mode="contained"
+              style={styles.button}
+              contentStyle={styles.buttonContent}
+              onPress={handleOpenPaypal}
+              loading={loading}
+              disabled={loading}
+              buttonColor="#0070BA" // PayPal blue, not black
+            >
+              Pay with PayPal
+            </Button>
+          </Card.Content>
+        </Card>
+      </View>
+    </SafeAreaView>
   );
 };
 
 export default PaypalScreen;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F3F4F6', // light grey, no black behind status bar
+  },
   container: {
     flex: 1,
     backgroundColor: '#F3F4F6',
     paddingHorizontal: 16,
     paddingTop: 24,
+    paddingBottom: 24,
   },
   card: {
     marginBottom: 12,
     borderRadius: 16,
+    backgroundColor: '#FFFFFF', // force white, avoid theme black
+    elevation: 2,
   },
   cardTitle: {
     fontWeight: '700',
     marginBottom: 6,
+    color: '#111827',
   },
   cardText: {
     marginBottom: 4,
+    color: '#111827',
   },
   cardSubText: {
     color: '#6B7280',

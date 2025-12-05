@@ -93,15 +93,15 @@ function ProfileStackNavigator() {
 const getTabIconComponent = (routeName: keyof RootTabParamList) => {
   switch (routeName) {
     case "Home":
-      return Icons.Icon1;
+      return Icons.Icon8;
     case "Learn":
-      return Icons.Icon2;
+      return Icons.Icon1;
     case "Quiz":
       return Icons.Icon3;
     case "Community":
       return Icons.Icon4;
     case "Profile":
-      return Icons.Icon5;
+      return Icons.Icon9;
     default:
       return Icons.Icon14;
   }

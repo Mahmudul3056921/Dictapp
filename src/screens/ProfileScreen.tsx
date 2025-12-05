@@ -21,8 +21,8 @@ const WEB_CLIENT_ID =
 
 // ------------ Icon components (outside ProfileScreen to satisfy eslint) ------------
 const GoogleIcon = () => <Icons.Icon16 width={36} height={36} />;
-const PerformanceIcon = () => <Icons.Icon5 width={16} height={16} />;
-const SubscriptionIcon = () => <Icons.Icon6 width={16} height={16} />;
+const PerformanceIcon = () => <Icons.Icon5 width={36} height={36} />;
+const SubscriptionIcon = () => <Icons.Icon6 width={36} height={36} />;
 const LogoutIcon = () => <Icons.Icon7 width={36} height={36} />;
 
 export default function ProfileScreen() {
@@ -187,7 +187,7 @@ export default function ProfileScreen() {
             <Card.Content>
               <View style={styles.titleRow}>
                 <View style={styles.svgIconWrapper}>
-                  <Icons.Icon3 width={20} height={20} />
+                  <Icons.Icon3 width={36} height={36} />
                 </View>
                 <Text style={styles.sectionTitle}>My Learning</Text>
               </View>
@@ -233,7 +233,7 @@ export default function ProfileScreen() {
             <Card.Content>
               <View style={styles.titleRow}>
                 <View style={styles.svgIconWrapper}>
-                  <Icons.Icon4 width={20} height={20} />
+                  <Icons.Icon4 width={36} height={36} />
                 </View>
                 <Text style={styles.sectionTitle}>Account</Text>
               </View>

@@ -9,6 +9,8 @@ import {
   Animated,
   StatusBar,
   Pressable,
+  TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,12 +19,14 @@ import MaterialButton from "../components/MaterialButton";
 import { AuthContext } from "../context/AuthContext";
 import { LanguageContext, Language } from "../context/LanguageContext";
 import { Icons } from "../components/Icons";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import api from "../api/client";
 
 /* ---------------- SVG ICON COMPONENTS (top-level) ---------------- */
-const QuizIcon = () => <Icons.Icon8 width={26} height={26} />;
-const ProgressIcon = () => <Icons.Icon9 width={26} height={26} />;
-const BookIcon = () => <Icons.Icon10 width={26} height={26} />;
-const UserIcon = () => <Icons.Icon14 width={30} height={30} />;
+const QuizIcon = () => <Icons.Icon8 width={30} height={30} />;
+const ProgressIcon = () => <Icons.Icon21 width={30} height={30} />;
+const BookIcon = () => <Icons.Icon18 width={30} height={30} />;
+const UserIcon = () => <Icons.Icon14 width={26} height={26} />;
 
 /* ---------------------------------------------------
    FULL HOME_TEXTS (ALL LANGUAGES REQUIRED BY TS)
@@ -53,7 +57,7 @@ const HOME_TEXTS: Record<
     heroTitle2: "স্মার্টভাবে",
     heroTitle3: "শিখুন",
     heroParagraph:
-      "যেখানে খুশি, যখন খুশি—মোবাইলেই জার্মান শব্দ অনুশীলন করুন ও কুইজের মাধ্যমে দক্ষতা যাচাই করুন। অন্যদের তুলনায় দ্রুত শিখুন, শব্দগুলো স্থায়ীভাবে মনে রাখুন।",
+      "যেখানে খুশি, যখন খুশি—মোবাইলে জার্মান শব্দ অনুশীলন করুন ও কুইজের মাধ্যমে দক্ষতা যাচাই করুন। অন্যদের তুলনায় দ্রুত শিখুন, শব্দগুলো স্থায়ীভাবে মনে রাখুন।",
     btnLearn: "শুরু করুন (LEARN)",
     btnQuiz: "কুইজ খেলুন",
     studentsLine: "100+ শিক্ষার্থী ইতিমধ্যে AusbildungFit দিয়ে অনুশীলন করছেন",
@@ -113,11 +117,11 @@ const HOME_TEXTS: Record<
       "کہیں بھی، کبھی بھی — موبائل پر الفاظ کی مشق کریں اور کوئز سے خود کو آزمائیں۔",
     btnLearn: "شروع کریں (LEARN)",
     btnQuiz: "کوئز کھیلیں",
-    studentsLine: "100+ طلبہ पहले ही مشق कर رہے ہیں",
+    studentsLine: "100+ طلبہ पहले ही مشق कर रहे हैं",
     feature1Title: "کوئز کھیلیں",
     feature1Text: "تیز کوئز سے نئے الفاظ سیکھیں।",
     feature2Title: "آپ کی پیش رفت",
-    feature2Text: "فوراً کمزور حصے معلوم کریں۔",
+    feature2Text: "فوراً کمزور حصے معلوم کریں।",
     feature3Title: "اہم الفاظ",
     feature3Text: "A1/A2/B1 سطح کی لغت.",
     partnersHeading: "ہمارے پارٹنر ادارے",
@@ -212,6 +216,30 @@ const LANGUAGE_LABELS: Record<Language, string> = {
   arabic: "عربي",
 };
 
+/* Which DB field to show as meaning, based on selected language */
+const LANGUAGE_TO_MEANING_FIELD: Record<Language, string | null> = {
+  bangla: "bangla",
+  english: null, // only English meaning
+  hindi: "hindi",
+  urdu: "urdu",
+  tamil: "tamil",
+  malayalam: "malayalam",
+  nepali: "nepali",
+  arabic: "arabic",
+};
+
+/* Label for the local meaning line */
+const LANGUAGE_MEANING_LABEL: Record<Language, string> = {
+  bangla: "Bangla",
+  english: "",
+  hindi: "Hindi",
+  urdu: "Urdu",
+  tamil: "Tamil",
+  malayalam: "Malayalam",
+  nepali: "Nepali",
+  arabic: "Arabic",
+};
+
 const LANGUAGE_ORDER: Language[] = [
   "bangla",
   "english",
@@ -227,8 +255,12 @@ const LANGUAGE_ORDER: Language[] = [
 const LOGOS = [
   require("../assets/logos/logo1.png"),
   require("../assets/logos/logo2.png"),
+  require("../assets/logos/logo3.png"),
+  require("../assets/logos/logo4.png"),
   require("../assets/logos/logo1.png"),
   require("../assets/logos/logo2.png"),
+  require("../assets/logos/logo3.png"),
+  require("../assets/logos/logo4.png"),
 ];
 
 /* ---------------------------------------------------
@@ -244,10 +276,21 @@ const HomeScreen = () => {
 
   const [showLangMenu, setShowLangMenu] = useState(false);
 
-  const t = HOME_TEXTS[language];
+  // 🔍 Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResult, setSearchResult] = useState<any | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
+  const t = HOME_TEXTS[language];
   const profilePhoto = user?.photoURL ?? null;
 
+  const meaningField = LANGUAGE_TO_MEANING_FIELD[language];
+  const meaningLabel = LANGUAGE_MEANING_LABEL[language];
+
+  // Only logged-in, non-basic users can search
+  const canSearch =
+    !!user && (user as any).role && (user as any).role !== "basic user";
 
   /* --- LOGO MARQUEE ANIMATION --- */
   useEffect(() => {
@@ -273,6 +316,53 @@ const HomeScreen = () => {
   }, [scrollX]);
 
   const duplicatedLogos = [...LOGOS, ...LOGOS];
+
+  // 🔍 Search handler (called from debounce effect and search icon)
+  const handleSearch = async (word: string) => {
+    if (!word) return;
+    try {
+      setSearchLoading(true);
+      setSearchError(null);
+      setSearchResult(null);
+
+      const res = await api.get("/search", {
+        params: { word },
+      });
+
+      const data = res.data || {};
+      if (!data || Object.keys(data).length === 0) {
+        setSearchError("No result found for this word.");
+        setSearchResult(null);
+      } else {
+        setSearchResult(data);
+      }
+    } catch (err: any) {
+      console.log("Search error:", err?.response?.data || err.message);
+      setSearchError("Search failed. Please try again.");
+      setSearchResult(null);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // 🔁 Debounce: search automatically as user types (no need to press enter)
+  useEffect(() => {
+    if (!canSearch) return;
+
+    const term = searchQuery.trim();
+
+    if (!term) {
+      setSearchResult(null);
+      setSearchError(null);
+      return;
+    }
+
+    const id = setTimeout(() => {
+      handleSearch(term);
+    }, 400); // 400ms after user stops typing
+
+    return () => clearTimeout(id);
+  }, [searchQuery, canSearch]);
 
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
@@ -344,7 +434,6 @@ const HomeScreen = () => {
               />
             ) : (
               <View style={styles.profileAvatar}>
-                {/* SVG user icon instead of "A" text */}
                 <UserIcon />
               </View>
             )}
@@ -352,12 +441,68 @@ const HomeScreen = () => {
         </View>
       </View>
 
+      {/* 🔍 SEARCH BAR (ONLY FOR ELIGIBLE LOGGED-IN USERS) */}
+      {canSearch && (
+        <View style={styles.searchBarWrapper}>
+          <View style={styles.searchBar}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search your German words…"
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <Pressable
+              style={styles.searchIconButton}
+              onPress={() => handleSearch(searchQuery.trim())}
+            >
+              {searchLoading ? (
+                <ActivityIndicator size="small" color="#6366F1" />
+              ) : (
+              <Icons.Icon15 width={36} height={36} />
+              )}
+            </Pressable>
+          </View>
+          {searchError && (
+            <Text style={styles.searchErrorText}>{searchError}</Text>
+          )}
+        </View>
+      )}
+
       {/* ---------------- MAIN CONTENT ---------------- */}
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* 🔍 SEARCH RESULT CARD (IF ANY) */}
+        {canSearch && searchResult && (
+          <View style={styles.searchResultCard}>
+            <Text style={styles.searchResultWord}>{searchResult.word}</Text>
+
+            {/* Always English */}
+            {searchResult.english && (
+              <Text style={styles.searchResultLine}>
+                English: {searchResult.english}
+              </Text>
+            )}
+
+            {/* Local language meaning based on toggle */}
+            {meaningField &&
+              searchResult[meaningField] && (
+                <Text style={styles.searchResultLine}>
+                  {meaningLabel}: {searchResult[meaningField]}
+                </Text>
+              )}
+
+            {searchResult.sentence && (
+              <Text style={styles.searchResultSentence}>
+                {searchResult.sentence}
+              </Text>
+            )}
+          </View>
+        )}
+
         {/* ---------------- HERO CARD ---------------- */}
         <View style={styles.heroCard}>
           <View style={styles.heroTextContainer}>
@@ -379,7 +524,7 @@ const HomeScreen = () => {
                 type="primary"
                 onPress={() => navigation.navigate("Learn")}
               />
-              <MaterialButton
+            <MaterialButton
                 label={t.btnQuiz}
                 type="secondary"
                 onPress={() => navigation.navigate("Quiz")}
@@ -397,14 +542,12 @@ const HomeScreen = () => {
           </View>
 
           <View style={styles.heroImageWrapper}>
-            <View style={styles.heroCircleOne} />
-            <View style={styles.heroCircleTwo} />
-            <Image
-              source={require("../assets/banner.png")}
-              style={styles.heroImage}
-              resizeMode="contain"
-            />
-          </View>
+  <Image
+    source={require("../assets/banner.png")}
+    style={styles.heroImage}
+    resizeMode="cover"
+  />
+</View>
         </View>
 
         {/* ---------------- COLORFUL FEATURE CARDS (with SVG icons) ---------------- */}
@@ -581,6 +724,64 @@ const styles = StyleSheet.create({
     color: "#4F46E5",
   },
 
+  /* 🔍 SEARCH BAR */
+  searchBarWrapper: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E7EB",
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    paddingVertical: 0,
+    color: "#111827",
+  },
+  searchIconButton: {
+    marginLeft: 6,
+    padding: 4,
+  },
+  searchErrorText: {
+    marginTop: 4,
+    fontSize: 11,
+    color: "#DC2626",
+  },
+  searchResultCard: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 12,
+    elevation: 2,
+  },
+  searchResultWord: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 4,
+  },
+  searchResultLine: {
+    fontSize: 13,
+    color: "#4B5563",
+    marginTop: 2,
+  },
+  searchResultSentence: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 6,
+  },
+
   /* --- HERO CARD --- */
   container: { flex: 1 },
   contentContainer: {
@@ -660,33 +861,21 @@ const styles = StyleSheet.create({
   },
 
   /* --- HERO IMAGE --- */
-  heroImageWrapper: {
-    height: 170,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  heroCircleOne: {
-    position: "absolute",
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: "#E0E7FF",
-    top: 10,
-    right: 40,
-  },
-  heroCircleTwo: {
-    position: "absolute",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#FCE7F3",
-    bottom: 0,
-    left: 40,
-  },
-  heroImage: {
-    width: "100%",
-    height: 150,
-  },
+ heroImageWrapper: {
+  marginTop: 10,
+  borderRadius: 20,
+  overflow: "hidden",      // 🔑 makes the image corners actually round
+  width: "100%",           // full width of the hero card
+  alignSelf: "center",
+},
+heroImage: {
+  width: "100%",
+  height: 180,
+  borderRadius: 20,        // rounded corners
+},
+// (Optional) if not using circles anymore, you can delete heroCircleOne / heroCircleTwo
+
+ 
 
   /* --- NEW COLORFUL FEATURE CARDS --- */
   featuresSection: {
