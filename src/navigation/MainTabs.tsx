@@ -9,7 +9,6 @@ import {
   useSafeAreaInsets,
   type EdgeInsets,
 } from "react-native-safe-area-context";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 import HomeScreen from "../screens/HomeScreen";
 import LearnScreen from "../screens/LearnScreen";
@@ -21,12 +20,14 @@ import SubscriptionScreen from "../screens/SubscriptionScreen";
 import SpeakingLoungeScreen from "../screens/SpeakingLoungeScreen";
 import PerformanceScreen from "../screens/PerformanceScreen";
 
+import { Icons } from "../components/Icons"; // ✅ your custom SVG icons
+
 // ---------- Tab types ----------
 type RootTabParamList = {
   Home: undefined;
   Learn: undefined;
   Quiz: undefined;
-  Community: undefined; // 👈 bottom tab for community chat / speaking lounge
+  Community: undefined;
   Profile: undefined;
 };
 
@@ -59,7 +60,6 @@ function LearnStackNavigator() {
     <LearnStack.Navigator screenOptions={{ headerShown: false }}>
       <LearnStack.Screen name="LearnMain" component={LearnScreen} />
       <LearnStack.Screen name="Chapter" component={ChapterScreen} />
-      {/* Still available from Learn (e.g. SpeakingRoomFab) */}
       <LearnStack.Screen
         name="SpeakingLounge"
         component={SpeakingLoungeScreen}
@@ -78,42 +78,36 @@ function QuizStackNavigator() {
   );
 }
 
-// ---------- Profile stack (Profile + Performance + Subscription) ----------
+// ---------- Profile stack ----------
 function ProfileStackNavigator() {
   return (
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStack.Screen name="Performance" component={PerformanceScreen} />
-      <ProfileStack.Screen
-        name="Subscription"
-        component={SubscriptionScreen}
-      />
+      <ProfileStack.Screen name="Subscription" component={SubscriptionScreen} />
     </ProfileStack.Navigator>
   );
 }
 
-// ---------- Icon helper ----------
-const getTabIconName = (
-  routeName: keyof RootTabParamList,
-  focused: boolean
-) => {
+// ---------- NEW: SVG Icon Mapper ----------
+const getTabIconComponent = (routeName: keyof RootTabParamList) => {
   switch (routeName) {
     case "Home":
-      return "home";
+      return Icons.Icon1;
     case "Learn":
-      return "menu-book";
+      return Icons.Icon2;
     case "Quiz":
-      return focused ? "quiz" : "help-outline";
+      return Icons.Icon3;
     case "Community":
-      return "forum"; // 👈 community chat / speaking icon
+      return Icons.Icon4;
     case "Profile":
-      return focused ? "person" : "person-outline";
+      return Icons.Icon5;
     default:
-      return "circle";
+      return Icons.Icon14;
   }
 };
 
-// ---------- Options factory (outside component for eslint) ----------
+// ---------- Options factory ----------
 const createScreenOptions =
   (insets: EdgeInsets) =>
   ({
@@ -132,11 +126,11 @@ const createScreenOptions =
       paddingBottom: insets.bottom,
       paddingTop: 6,
     },
-    tabBarActiveTintColor: "#2563eb",
-    tabBarInactiveTintColor: "#9ca3af",
-    tabBarIcon: ({ color, size = 22, focused }) => {
-      const iconName = getTabIconName(route.name, focused);
-      return <MaterialIcons name={iconName} size={size} color={color} />;
+    tabBarActiveTintColor: "#2563EB",
+    tabBarInactiveTintColor: "#9CA3AF",
+    tabBarIcon: ({ color, size = 24 }) => {
+      const Icon = getTabIconComponent(route.name);
+      return <Icon width={size} height={size} fill={color} />;
     },
   });
 
@@ -144,10 +138,7 @@ const createScreenOptions =
 export default function MainTabs() {
   const insets = useSafeAreaInsets();
 
-  const screenOptions = useMemo(
-    () => createScreenOptions(insets),
-    [insets]
-  );
+  const screenOptions = useMemo(() => createScreenOptions(insets), [insets]);
 
   return (
     <Tab.Navigator screenOptions={screenOptions}>
@@ -162,13 +153,11 @@ export default function MainTabs() {
         component={QuizStackNavigator}
         options={{ title: "Quiz" }}
       />
-      {/* 👇 New community tab using SpeakingLoungeScreen */}
       <Tab.Screen
         name="Community"
         component={SpeakingLoungeScreen}
         options={{ title: "Community" }}
       />
-      {/* 👇 Profile tab with nested stack: Profile, Performance, Subscription */}
       <Tab.Screen
         name="Profile"
         component={ProfileStackNavigator}

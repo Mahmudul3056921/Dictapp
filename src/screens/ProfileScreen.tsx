@@ -1,23 +1,29 @@
 // src/screens/ProfileScreen.tsx
-import React, { useEffect, useState, useContext, useCallback } from "react";
-import { View, Text, StyleSheet, Image, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useEffect, useState, useContext, useCallback } from 'react';
+import { View, Text, StyleSheet, Image, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   GoogleSignin,
   SignInResponse,
   isSuccessResponse,
-} from "@react-native-google-signin/google-signin";
-import axios from "axios";
-import { useNavigation } from "@react-navigation/native";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { Card, Button as PaperButton } from "react-native-paper";
+} from '@react-native-google-signin/google-signin';
+import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
+import { Card, Button as PaperButton } from 'react-native-paper';
 
-import api from "../api/client";
-import { AuthContext } from "../context/AuthContext";
+import api from '../api/client';
+import { AuthContext } from '../context/AuthContext';
+import { Icons } from '../components/Icons';
 
-const API = "https://dictserver-main.vercel.app";
+const API = 'https://dictserver-main.vercel.app';
 const WEB_CLIENT_ID =
-  "978636197840-ubshs2i4lf66ln4fo3oisvp6tj4uq5i4.apps.googleusercontent.com";
+  '978636197840-ubshs2i4lf66ln4fo3oisvp6tj4uq5i4.apps.googleusercontent.com';
+
+// ------------ Icon components (outside ProfileScreen to satisfy eslint) ------------
+const GoogleIcon = () => <Icons.Icon16 width={36} height={36} />;
+const PerformanceIcon = () => <Icons.Icon5 width={16} height={16} />;
+const SubscriptionIcon = () => <Icons.Icon6 width={16} height={16} />;
+const LogoutIcon = () => <Icons.Icon7 width={36} height={36} />;
 
 export default function ProfileScreen() {
   const [role, setRole] = useState<string | null>(null);
@@ -45,10 +51,10 @@ export default function ProfileScreen() {
     }
     try {
       setLoadingRole(true);
-      const res = await api.get("/users/role/me");
+      const res = await api.get('/users/role/me');
       setRole(res.data?.role || null);
     } catch (err: any) {
-      console.log("role fetch error:", err?.response?.data || err.message);
+      console.log('role fetch error:', err?.response?.data || err.message);
       setRole(null);
     } finally {
       setLoadingRole(false);
@@ -72,24 +78,24 @@ export default function ProfileScreen() {
 
       const tokens = await GoogleSignin.getTokens();
       const idToken = tokens.idToken;
-      if (!idToken) throw new Error("No Google ID token");
+      if (!idToken) throw new Error('No Google ID token');
 
-      const result = await axios.post(API + "/auth/google", { idToken });
+      const result = await axios.post(API + '/auth/google', { idToken });
 
       const backendUser = result.data.user;
       const jwtToken = result.data.token;
 
       if (!backendUser?.email || !jwtToken) {
-        throw new Error("Invalid backend response");
+        throw new Error('Invalid backend response');
       }
 
       await setAuthFromBackend(backendUser, jwtToken);
       await fetchRole();
 
-      Alert.alert("Success", "You are logged in!");
+      Alert.alert('Success', 'You are logged in!');
     } catch (err) {
-      console.log("Google login error:", err);
-      Alert.alert("Login failed", "Could not sign in with Google");
+      console.log('Google login error:', err);
+      Alert.alert('Login failed', 'Could not sign in with Google');
     }
   };
 
@@ -98,7 +104,7 @@ export default function ProfileScreen() {
     try {
       await GoogleSignin.signOut();
     } catch (err) {
-      console.log("Google signOut error:", err);
+      console.log('Google signOut error:', err);
     }
     await logout();
     setRole(null);
@@ -106,31 +112,27 @@ export default function ProfileScreen() {
   };
 
   // Determine Enrollment Status
-  let enrollmentStatus = "Not logged in";
+  let enrollmentStatus = 'Not logged in';
   if (isLoggedIn) {
     if (loadingRole) {
-      enrollmentStatus = "Checking enrollment…";
+      enrollmentStatus = 'Checking enrollment…';
     } else if (
-      role === "admin" ||
-      role === "customer" ||
-      role === "customer2" ||
-      role === "customer3"
+      role === 'admin' ||
+      role === 'customer' ||
+      role === 'customer2' ||
+      role === 'customer3'
     ) {
-      enrollmentStatus = "Enrolled";
+      enrollmentStatus = 'Enrolled';
     } else {
-      enrollmentStatus = "Not enrolled";
+      enrollmentStatus = 'Not enrolled';
     }
   }
-
-  const avatarInitial =
-    user?.name?.[0]?.toUpperCase() ||
-    user?.email?.[0]?.toUpperCase() ||
-    "A";
 
   const avatarSource = user?.photoURL || googlePhoto || null;
 
   const hasEnrollment =
-    enrollmentStatus === "Enrolled" || enrollmentStatus === "Checking enrollment…";
+    enrollmentStatus === 'Enrolled' ||
+    enrollmentStatus === 'Checking enrollment…';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -140,22 +142,23 @@ export default function ProfileScreen() {
           <Image source={{ uri: avatarSource }} style={styles.avatar} />
         ) : (
           <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarInitial}>{avatarInitial}</Text>
+            {/* SVG avatar icon instead of letter */}
+            <Icons.Icon1 width={46} height={46} />
           </View>
         )}
 
         <Text style={styles.nameText}>
-          {user?.name || "Welcome to AusbildungFit"}
+          {user?.name || 'Welcome to AusbildungFit'}
         </Text>
 
         <Text style={styles.emailText}>
-          {user?.email || "Please sign in to continue"}
+          {user?.email || 'Please sign in to continue'}
         </Text>
 
         <View
           style={[
             styles.statusBadge,
-            enrollmentStatus === "Enrolled"
+            enrollmentStatus === 'Enrolled'
               ? styles.statusEnrolled
               : styles.statusNotEnrolled,
           ]}
@@ -169,7 +172,7 @@ export default function ProfileScreen() {
             buttonColor="#2563EB"
             labelStyle={styles.primaryButtonLabel}
             style={styles.signInButton}
-            icon="google"
+            icon={GoogleIcon}
             onPress={handleSignIn}
           >
             Sign in with Google
@@ -183,12 +186,9 @@ export default function ProfileScreen() {
           <Card style={styles.sectionCard} mode="elevated">
             <Card.Content>
               <View style={styles.titleRow}>
-                <MaterialCommunityIcons
-                  name="school-outline"
-                  size={20}
-                  color="#4F46E5"
-                  style={styles.titleIcon}
-                />
+                <View style={styles.svgIconWrapper}>
+                  <Icons.Icon3 width={20} height={20} />
+                </View>
                 <Text style={styles.sectionTitle}>My Learning</Text>
               </View>
 
@@ -197,25 +197,24 @@ export default function ProfileScreen() {
               </Text>
 
               <View style={styles.buttonRow}>
-                {/* Performance button now styled like Subscription (outlined blue) */}
                 <PaperButton
                   mode="outlined"
-                  icon="chart-bar"
                   textColor="#2563EB"
                   labelStyle={styles.secondaryButtonLabel}
                   style={styles.secondaryButton}
-                  onPress={() => navigation.navigate("Performance")}
+                  icon={PerformanceIcon}
+                  onPress={() => navigation.navigate('Performance')}
                 >
                   Performance
                 </PaperButton>
 
                 <PaperButton
                   mode="outlined"
-                  icon="credit-card-outline"
                   textColor="#2563EB"
                   labelStyle={styles.secondaryButtonLabel}
                   style={styles.secondaryButton}
-                  onPress={() => navigation.navigate("Subscription")}
+                  icon={SubscriptionIcon}
+                  onPress={() => navigation.navigate('Subscription')}
                 >
                   Subscription
                 </PaperButton>
@@ -233,12 +232,9 @@ export default function ProfileScreen() {
           <Card style={styles.sectionCard} mode="elevated">
             <Card.Content>
               <View style={styles.titleRow}>
-                <MaterialCommunityIcons
-                  name="account-circle-outline"
-                  size={20}
-                  color="#4B5563"
-                  style={styles.titleIcon}
-                />
+                <View style={styles.svgIconWrapper}>
+                  <Icons.Icon4 width={20} height={20} />
+                </View>
                 <Text style={styles.sectionTitle}>Account</Text>
               </View>
 
@@ -248,10 +244,10 @@ export default function ProfileScreen() {
 
               <PaperButton
                 mode="outlined"
-                icon="logout"
                 textColor="#DC2626"
                 labelStyle={styles.logoutButtonLabel}
                 style={styles.logoutButton}
+                icon={LogoutIcon}
                 onPress={handleSignOut}
               >
                 Sign out
@@ -270,15 +266,15 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: '#EEF2FF',
     padding: 16,
   },
 
   headerCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     padding: 20,
     borderRadius: 20,
-    alignItems: "center",
+    alignItems: 'center',
     elevation: 3,
     marginBottom: 20,
   },
@@ -294,27 +290,21 @@ const styles = StyleSheet.create({
     width: 95,
     height: 95,
     borderRadius: 50,
-    backgroundColor: "#E5E7EB",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 10,
-  },
-
-  avatarInitial: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#4B5563",
   },
 
   nameText: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: '700',
     marginTop: 4,
   },
 
   emailText: {
     fontSize: 14,
-    color: "#6B7280",
+    color: '#6B7280',
     marginBottom: 8,
   },
 
@@ -326,17 +316,17 @@ const styles = StyleSheet.create({
   },
 
   statusEnrolled: {
-    backgroundColor: "#D1FAE5",
+    backgroundColor: '#D1FAE5',
   },
 
   statusNotEnrolled: {
-    backgroundColor: "#FEE2E2",
+    backgroundColor: '#FEE2E2',
   },
 
   statusText: {
     fontSize: 12,
-    fontWeight: "600",
-    color: "#111827",
+    fontWeight: '600',
+    color: '#111827',
   },
 
   signInButton: {
@@ -344,69 +334,73 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
 
+  primaryButtonLabel: {
+    color: 'white',
+    fontWeight: '600',
+  },
+
   sectionCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     borderRadius: 18,
     paddingBottom: 10,
     marginBottom: 14,
   },
 
   titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 6,
   },
 
-  titleIcon: {
+  svgIconWrapper: {
+    width: 24,
+    height: 24,
     marginRight: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: '700',
   },
 
   sectionSubtitle: {
     fontSize: 13,
-    color: "#6B7280",
+    color: '#6B7280',
     marginBottom: 16,
   },
 
   buttonRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     columnGap: 10,
   },
 
   secondaryButton: {
     flex: 1,
     borderRadius: 999,
-    borderColor: "#2563EB",
-  },
-
-  primaryButtonLabel: {
-    color: "white",
-    fontWeight: "600",
+    borderColor: '#2563EB',
   },
 
   secondaryButtonLabel: {
-    fontWeight: "600",
-    color: "#2563EB",
+    fontWeight: '600',
+    color: '#2563EB',
   },
 
   helperText: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: '#9CA3AF',
     marginTop: 8,
   },
 
   logoutButton: {
     borderRadius: 999,
-    borderColor: "#DC2626",
+    borderColor: '#DC2626',
     marginTop: 4,
   },
 
   logoutButtonLabel: {
-    color: "#DC2626",
-    fontWeight: "600",
+    color: '#DC2626',
+    fontWeight: '600',
   },
 });

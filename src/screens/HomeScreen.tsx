@@ -12,11 +12,17 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 import MaterialButton from "../components/MaterialButton";
 import { AuthContext } from "../context/AuthContext";
 import { LanguageContext, Language } from "../context/LanguageContext";
+import { Icons } from "../components/Icons";
+
+/* ---------------- SVG ICON COMPONENTS (top-level) ---------------- */
+const QuizIcon = () => <Icons.Icon8 width={26} height={26} />;
+const ProgressIcon = () => <Icons.Icon9 width={26} height={26} />;
+const BookIcon = () => <Icons.Icon10 width={26} height={26} />;
+const UserIcon = () => <Icons.Icon14 width={30} height={30} />;
 
 /* ---------------------------------------------------
    FULL HOME_TEXTS (ALL LANGUAGES REQUIRED BY TS)
@@ -107,9 +113,9 @@ const HOME_TEXTS: Record<
       "کہیں بھی، کبھی بھی — موبائل پر الفاظ کی مشق کریں اور کوئز سے خود کو آزمائیں۔",
     btnLearn: "شروع کریں (LEARN)",
     btnQuiz: "کوئز کھیلیں",
-    studentsLine: "100+ طلبہ پہلے ہی مشق کر رہے ہیں",
+    studentsLine: "100+ طلبہ पहले ही مشق कर رہے ہیں",
     feature1Title: "کوئز کھیلیں",
-    feature1Text: "تیز کوئز سے نئے الفاظ سیکھیں۔",
+    feature1Text: "تیز کوئز سے نئے الفاظ سیکھیں।",
     feature2Title: "آپ کی پیش رفت",
     feature2Text: "فوراً کمزور حصے معلوم کریں۔",
     feature3Title: "اہم الفاظ",
@@ -241,8 +247,7 @@ const HomeScreen = () => {
   const t = HOME_TEXTS[language];
 
   const profilePhoto = user?.photoURL ?? null;
-  const profileInitial =
-    user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "A";
+
 
   /* --- LOGO MARQUEE ANIMATION --- */
   useEffect(() => {
@@ -333,10 +338,14 @@ const HomeScreen = () => {
             onPress={() => navigation.navigate("Profile")}
           >
             {profilePhoto ? (
-              <Image source={{ uri: profilePhoto }} style={styles.profileAvatarImage} />
+              <Image
+                source={{ uri: profilePhoto }}
+                style={styles.profileAvatarImage}
+              />
             ) : (
               <View style={styles.profileAvatar}>
-                <Text style={styles.profileAvatarText}>{profileInitial}</Text>
+                {/* SVG user icon instead of "A" text */}
+                <UserIcon />
               </View>
             )}
           </Pressable>
@@ -398,11 +407,11 @@ const HomeScreen = () => {
           </View>
         </View>
 
-        {/* ---------------- NEW COLORFUL FEATURE CARDS ---------------- */}
+        {/* ---------------- COLORFUL FEATURE CARDS (with SVG icons) ---------------- */}
         <View style={styles.featuresSection}>
           <View style={[styles.featureCardNew, styles.featureCardPrimary]}>
             <View style={styles.featureIconWrapper}>
-              <Icon name="gamepad-variant" size={26} color="#FFFFFF" />
+              <QuizIcon />
             </View>
             <View style={styles.featureTextWrapper}>
               <Text style={styles.featureTitleNew}>{t.feature1Title}</Text>
@@ -412,7 +421,7 @@ const HomeScreen = () => {
 
           <View style={[styles.featureCardNew, styles.featureCardSecondary]}>
             <View style={styles.featureIconWrapper}>
-              <Icon name="chart-line" size={26} color="#FFFFFF" />
+              <ProgressIcon />
             </View>
             <View style={styles.featureTextWrapper}>
               <Text style={styles.featureTitleNew}>{t.feature2Title}</Text>
@@ -422,7 +431,7 @@ const HomeScreen = () => {
 
           <View style={[styles.featureCardNew, styles.featureCardTertiary]}>
             <View style={styles.featureIconWrapper}>
-              <Icon name="book-open-page-variant" size={26} color="#FFFFFF" />
+              <BookIcon />
             </View>
             <View style={styles.featureTextWrapper}>
               <Text style={styles.featureTitleNew}>{t.feature3Title}</Text>
@@ -444,7 +453,11 @@ const HomeScreen = () => {
             >
               {duplicatedLogos.map((logo, index) => (
                 <View key={index} style={styles.logoWrapper}>
-                  <Image source={logo} style={styles.logoImage} resizeMode="contain" />
+                  <Image
+                    source={logo}
+                    style={styles.logoImage}
+                    resizeMode="contain"
+                  />
                 </View>
               ))}
             </Animated.View>
@@ -495,8 +508,8 @@ const styles = StyleSheet.create({
   },
 
   appBarLogo: {
-    width: 24,
-    height: 24,
+    width: 36,
+    height: 36,
     marginRight: 10,
   },
   appBarTitle: {

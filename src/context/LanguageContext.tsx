@@ -17,14 +17,14 @@ type LanguageContextValue = {
 };
 
 const LanguageContext = createContext<LanguageContextValue>({
-  language: "bangla",
+  language: "english",
   setLanguage: () => {},
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [language, setLanguage] = useState<Language>("bangla"); // default = bangla
+  const [language, setLanguage] = useState<Language>("english"); // default = bangla
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage }}>
