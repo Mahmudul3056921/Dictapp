@@ -1,9 +1,10 @@
 // App.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider as PaperProvider } from "react-native-paper";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import BootSplash from "react-native-bootsplash"; // 👈 add this
 
 import MainTabs from "./src/navigation/MainTabs";
 import PaypalScreen from "./src/screens/PaypalScreen";
@@ -28,7 +29,6 @@ function AppNavigation() {
           options={{ headerShown: false }}
         />
 
-        {/* Only keep Paypal here as a modal/stack screen */}
         <RootStack.Screen
           name="Paypal"
           component={PaypalScreen}
@@ -40,6 +40,11 @@ function AppNavigation() {
 }
 
 export default function App() {
+  // 👇 hide native splash when React side is ready
+  useEffect(() => {
+    BootSplash.hide({ fade: true }); // you can remove fade if you want instant hide
+  }, []);
+
   return (
     <PaperProvider>
       <AuthProvider>
