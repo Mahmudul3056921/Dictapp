@@ -102,7 +102,7 @@ const ChapterScreen = () => {
           'Chapter fetch error:',
           e?.response?.data || e.message
         );
-        setError('ডেটা লোড করতে সমস্যা হচ্ছে।');
+        setError('The data isn’t loading due to an internet issue.');
       } finally {
         setLoading(false);
       }
@@ -157,7 +157,7 @@ const ChapterScreen = () => {
       <View style={styles.center}>
         <ActivityIndicator />
         <Text style={styles.loadingText}>
-          Chapter {chapterNum} ({level}) লোড হচ্ছে…
+          Chapter {chapterNum} ({level}) is loading…
         </Text>
       </View>
     );
@@ -167,7 +167,7 @@ const ChapterScreen = () => {
     return (
       <View style={styles.center}>
         <Text style={styles.error}>
-          {error || 'কোনও শব্দ পাওয়া যায়নি।'}
+          {error || 'Couldn not find any word'}
         </Text>
       </View>
     );
@@ -184,7 +184,7 @@ const ChapterScreen = () => {
         Chapter {chapterNum} – {level}
       </Text>
       <Text style={styles.subtitle}>
-        Previous / Next দিয়ে শব্দগুলো ঘোরাতে পারো।
+        Use Previous/Next to browse words.
       </Text>
 
       <View style={styles.card}>

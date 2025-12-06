@@ -32,8 +32,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
 
         // 🔢 Play Store-এর জন্য versionCode / versionName
-        versionCode 1          // প্রথম রিলিজের জন্য 1
-        versionName "1.0.0"    // ইচ্ছে করলে "1.0" রাখতেই পারো
+        versionCode 3          // প্রথম রিলিজের জন্য 1
+        versionName "1.0.3"    // ইচ্ছে করলে "1.0" রাখতেই পারো
     }
 
     // 🔐 SIGNING CONFIGS

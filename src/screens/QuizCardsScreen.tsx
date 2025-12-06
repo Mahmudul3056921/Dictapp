@@ -181,7 +181,7 @@ const QuizCardsScreen = () => {
         setData(res.data || []);
       } catch (e: any) {
         console.log('Quiz words error:', e?.response?.data || e.message);
-        setError('শব্দ লোড করতে সমস্যা হচ্ছে।'); // can also localize if you want
+        setError('Word failed to load.'); // can also localize if you want
       } finally {
         setLoading(false);
       }

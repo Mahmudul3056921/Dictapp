@@ -19,7 +19,6 @@ import MaterialButton from "../components/MaterialButton";
 import { AuthContext } from "../context/AuthContext";
 import { LanguageContext, Language } from "../context/LanguageContext";
 import { Icons } from "../components/Icons";
-import Ionicons from "react-native-vector-icons/Ionicons";
 import api from "../api/client";
 
 /* ---------------- SVG ICON COMPONENTS (top-level) ---------------- */
@@ -104,7 +103,7 @@ const HOME_TEXTS: Record<
     feature2Title: "आपकी प्रगति",
     feature2Text: "कमजोर भागों को पहचानें।",
     feature3Title: "ज़रूरी शब्दावली",
-    feature3Text: "A1/A2/B1 स्तर के शब्द.",
+    feature3Text: "A1/A2/B1 स्तर के শব্দ.",
     partnersHeading: "हमारे पार्टनर संस्थान",
   },
 
@@ -119,11 +118,11 @@ const HOME_TEXTS: Record<
     btnQuiz: "کوئز کھیلیں",
     studentsLine: "100+ طلبہ पहले ही مشق कर रहे हैं",
     feature1Title: "کوئز کھیلیں",
-    feature1Text: "تیز کوئز سے نئے الفاظ سیکھیں।",
+    feature1Text: "تیز کوئز سے نئے الفاظ سیکھیں۔",
     feature2Title: "آپ کی پیش رفت",
     feature2Text: "فوراً کمزور حصے معلوم کریں।",
     feature3Title: "اہم الفاظ",
-    feature3Text: "A1/A2/B1 سطح کی لغت.",
+    feature3Text: "A1/A2/B1 سطح की لغत.",
     partnersHeading: "ہمارے پارٹنر ادارے",
   },
 
@@ -459,7 +458,7 @@ const HomeScreen = () => {
               {searchLoading ? (
                 <ActivityIndicator size="small" color="#6366F1" />
               ) : (
-              <Icons.Icon15 width={36} height={36} />
+                <Icons.Icon15 width={36} height={36} />
               )}
             </Pressable>
           </View>
@@ -474,6 +473,7 @@ const HomeScreen = () => {
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* 🔍 SEARCH RESULT CARD (IF ANY) */}
         {canSearch && searchResult && (
@@ -488,12 +488,11 @@ const HomeScreen = () => {
             )}
 
             {/* Local language meaning based on toggle */}
-            {meaningField &&
-              searchResult[meaningField] && (
-                <Text style={styles.searchResultLine}>
-                  {meaningLabel}: {searchResult[meaningField]}
-                </Text>
-              )}
+            {meaningField && searchResult[meaningField] && (
+              <Text style={styles.searchResultLine}>
+                {meaningLabel}: {searchResult[meaningField]}
+              </Text>
+            )}
 
             {searchResult.sentence && (
               <Text style={styles.searchResultSentence}>
@@ -524,7 +523,7 @@ const HomeScreen = () => {
                 type="primary"
                 onPress={() => navigation.navigate("Learn")}
               />
-            <MaterialButton
+              <MaterialButton
                 label={t.btnQuiz}
                 type="secondary"
                 onPress={() => navigation.navigate("Quiz")}
@@ -542,12 +541,12 @@ const HomeScreen = () => {
           </View>
 
           <View style={styles.heroImageWrapper}>
-  <Image
-    source={require("../assets/banner.png")}
-    style={styles.heroImage}
-    resizeMode="cover"
-  />
-</View>
+            <Image
+              source={require("../assets/banner.png")}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+          </View>
         </View>
 
         {/* ---------------- COLORFUL FEATURE CARDS (with SVG icons) ---------------- */}
@@ -759,11 +758,16 @@ const styles = StyleSheet.create({
   searchResultCard: {
     marginHorizontal: 16,
     marginTop: 12,
-    marginBottom: 8,
+    marginBottom: 16,
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 12,
-    elevation: 2,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    zIndex: 10,
   },
   searchResultWord: {
     fontSize: 16,
@@ -861,21 +865,17 @@ const styles = StyleSheet.create({
   },
 
   /* --- HERO IMAGE --- */
- heroImageWrapper: {
-  marginTop: 10,
-  borderRadius: 20,
-  overflow: "hidden",      // 🔑 makes the image corners actually round
-  width: "100%",           // full width of the hero card
-  alignSelf: "center",
-},
-heroImage: {
-  width: "100%",
-  height: 180,
-  borderRadius: 20,        // rounded corners
-},
-// (Optional) if not using circles anymore, you can delete heroCircleOne / heroCircleTwo
-
- 
+  heroImageWrapper: {
+    marginTop: 16,
+    borderRadius: 24,
+    overflow: "hidden",
+    width: "100%",
+    alignSelf: "center",
+  },
+  heroImage: {
+    width: "100%",
+    aspectRatio: 16 / 9, // keeps proportions on phone + tablet
+  },
 
   /* --- NEW COLORFUL FEATURE CARDS --- */
   featuresSection: {
